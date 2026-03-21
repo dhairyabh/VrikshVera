@@ -1,0 +1,281 @@
+/* ============================================================
+   KrishiMitra — Animations & Effects
+   ============================================================ */
+
+/* ── Keyframes ───────────────────────────────────────────────── */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.6; transform: scale(1.04); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(0,229,113,0.3); }
+  50%       { box-shadow: 0 0 50px rgba(0,229,113,0.7), 0 0 80px rgba(0,229,113,0.2); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(80px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(80px) rotate(-360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -400% 0; }
+  100% { background-position: 400% 0; }
+}
+
+@keyframes scanline {
+  0%   { transform: translateY(-5%); opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { transform: translateY(105%); opacity: 0; }
+}
+
+@keyframes ring-fill {
+  from { stroke-dashoffset: 440; }
+  to   { stroke-dashoffset: var(--dash-offset); }
+}
+
+@keyframes counter-up {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.4); }
+  50%       { transform: scaleY(1.2); }
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes data-flow {
+  0%   { stroke-dashoffset: 150; opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+/* ── Entry Animations ────────────────────────────────────────── */
+.animate-fade-up {
+  animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease forwards;
+  opacity: 0;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-slide-right {
+  animation: slideRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+/* Staggered delays */
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.35s; }
+.delay-4 { animation-delay: 0.5s; }
+.delay-5 { animation-delay: 0.65s; }
+.delay-6 { animation-delay: 0.8s; }
+
+/* ── Scroll-triggered reveal ────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-left  { opacity: 0; transform: translateX(-30px); transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+.reveal-right { opacity: 0; transform: translateX(30px);  transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+.reveal-left.visible, .reveal-right.visible { opacity: 1; transform: translateX(0); }
+
+/* ── Floating Elements ─────────────────────────────────────── */
+.float-slow  { animation: float 5s ease-in-out infinite; }
+.float-med   { animation: float 3.5s ease-in-out infinite; }
+.float-fast  { animation: float 2.5s ease-in-out infinite; }
+
+/* ── Glow Pulse ─────────────────────────────────────────────── */
+.glow-pulse { animation: glow-pulse 2.5s ease-in-out infinite; }
+
+/* ── Shimmer Effect (for skeleton/loading states) ────────────── */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.12) 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ── Scanline Effect ─────────────────────────────────────────── */
+.scanline-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline-container::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--green-glow), transparent);
+  animation: scanline 3s ease-in-out infinite 1s;
+  box-shadow: 0 0 12px rgba(0,229,113,0.8);
+  pointer-events: none;
+}
+
+/* ── 3D Tilt Card ─────────────────────────────────────────── */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease;
+}
+
+/* ── Blink ─────────────────────────────────────────────────── */
+.blink { animation: blink 1.5s ease-in-out infinite; }
+
+/* ── Data stream dots ──────────────────────────────────────── */
+.data-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green-glow);
+  box-shadow: 0 0 8px var(--green-glow);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.data-dot:nth-child(2) { animation-delay: 0.3s; background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.data-dot:nth-child(3) { animation-delay: 0.6s; }
+
+/* ── Voice Waveform ─────────────────────────────────────────── */
+.waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 32px;
+}
+
+.wave-bar {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--green-glow);
+  animation: wave 1s ease-in-out infinite;
+}
+
+.wave-bar:nth-child(1) { animation-delay: 0s;    height: 30%; }
+.wave-bar:nth-child(2) { animation-delay: 0.1s;  height: 60%; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s;  height: 100%; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s;  height: 70%; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s;  height: 40%; }
+.wave-bar:nth-child(6) { animation-delay: 0.5s;  height: 80%; }
+.wave-bar:nth-child(7) { animation-delay: 0.4s;  height: 50%; }
+.wave-bar:nth-child(8) { animation-delay: 0.3s;  height: 30%; }
+
+/* ── Radar Pulse ─────────────────────────────────────────────── */
+.radar-ring {
+  position: absolute;
+  border: 1.5px solid rgba(0,229,113,0.3);
+  border-radius: 50%;
+  animation: pulse 3s ease-in-out infinite;
+}
+
+/* ── Hero Canvas Overlay ──────────────────────────────────── */
+#hero-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Orb Glows (decorative background blobs) ──────────────── */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.orb-green {
+  background: radial-gradient(circle, rgba(0,229,113,0.18) 0%, transparent 70%);
+}
+
+.orb-amber {
+  background: radial-gradient(circle, rgba(245,166,35,0.15) 0%, transparent 70%);
+}
+
+.orb-blue {
+  background: radial-gradient(circle, rgba(0,150,255,0.12) 0%, transparent 70%);
+}
+
+/* ── Step Number ──────────────────────────────────────────── */
+.step-number {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green-glow), var(--green-dark));
+  color: #000;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--glow-green);
+  flex-shrink: 0;
+  transition: transform 0.3s;
+}
+
+.step:hover .step-number { transform: scale(1.1) rotate(-5deg); }

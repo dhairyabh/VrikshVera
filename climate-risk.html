@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Climate Risk Map — KrishiMitra</title>
+  <meta name="description" content="Uttarakhand district-wise climate risk heatmap showing landslide, flood, drought and frost risk levels with satellite data.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style_v25.css">
+  <link rel="stylesheet" href="css/animations_v25.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div id="page-overlay"></div>
+
+<!-- ── Navbar ─────────────────────────────────────────── -->
+<nav class="navbar scrolled">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🌿</div>
+    <span class="nav-logo-text">Krishi<span>Mitra</span></span>
+  </a>
+      <div class="nav-links">
+        <a href="index.html" data-lang="nav.home">Home</a>
+        <a href="dashboard.html" data-lang="nav.dashboard">Dashboard</a>
+        <a href="crop-advisor.html" data-lang="nav.advisor">Crop Advisor</a>
+        <a href="climate-risk.html" class="active" data-lang="nav.risk">Climate Risk</a>
+        <a href="chatbot.html" data-lang="nav.chatbot">AI Chatbot</a>
+        <button class="lang-toggle" id="lang-btn" data-lang="lang.label">🌐 हिंदी</button>
+        <a href="dashboard.html" class="nav-cta" data-lang="nav.cta">Open Dashboard →</a>
+      </div>
+</nav>
+
+<!-- ── Page Header ────────────────────────────────────── -->
+<div class="risk-header">
+  <div class="orb orb-red" style="width:500px;height:500px;top:-200px;left:-150px;background:radial-gradient(circle,rgba(255,59,85,0.12),transparent 70%)"></div>
+  <p class="dash-breadcrumb">🏠 <span data-lang="nav.home">Home</span> / <span class="text-amber" data-lang="nav.risk">Climate Risk</span></p>
+  <h1 data-lang="risk.title">District Risk <span class="gradient-text">Intelligence Map</span></h1>
+  <p style="max-width:580px" data-lang="risk.desc">Real-time climate risk assessment for all 13 Uttarakhand districts using satellite data, weather feeds, and geological surveys.</p>
+  <div style="display:flex;gap:0.75rem;margin-top:1.2rem;flex-wrap:wrap">
+    <span class="badge badge-red" data-lang="risk.badge.high">🔴 High Risk Districts: 4</span>
+    <span class="badge badge-amber" data-lang="risk.badge.medium">🟡 Medium Risk: 6</span>
+    <span class="badge badge-green" data-lang="risk.badge.low">🟢 Low Risk: 3</span>
+    <span class="badge badge-green" data-lang="risk.badge.sat">🛰️ Last satellite pass: 2h ago</span>
+  </div>
+</div>
+
+<!-- ── Main Risk Layout ───────────────────────────────── -->
+<div class="risk-main">
+  <!-- Left: District Grid -->
+  <div class="risk-left">
+    <div class="glass-card risk-map-panel">
+      <div class="panel-header">
+        <h3 data-lang="risk.map">🗺️ Uttarakhand Risk Map</h3>
+        <div id="risk-legend" class="risk-legend-inline"></div>
+      </div>
+      <p class="text-muted" style="font-size:0.82rem;margin-bottom:1.2rem" data-lang="risk.hint">Click any district to view detailed risk breakdown</p>
+      <div id="district-grid" class="district-risk-grid"></div>
+    </div>
+
+    <!-- Hazard Type Cards -->
+    <div class="grid-4 hazard-overview-grid">
+      <div class="glass-card hazard-card reveal" data-delay="0">
+        <div class="hazard-icon">⛰️</div>
+        <div class="hazard-name" data-lang="hazard.landslide">Landslide</div>
+        <div class="hazard-stat text-amber">4 <span data-lang="hazard.districts">Districts</span></div>
+        <div class="hazard-detail text-muted" data-lang="hazard.level.high">HIGH level</div>
+      </div>
+      <div class="glass-card hazard-card reveal" data-delay="100">
+        <div class="hazard-icon">🌊</div>
+        <div class="hazard-name" data-lang="hazard.flood">Flood</div>
+        <div class="hazard-stat text-amber">3 <span data-lang="hazard.districts">Districts</span></div>
+        <div class="hazard-detail text-muted" data-lang="hazard.level.high">HIGH level</div>
+      </div>
+      <div class="glass-card hazard-card reveal" data-delay="200">
+        <div class="hazard-icon">☀️</div>
+        <div class="hazard-name" data-lang="hazard.drought">Drought</div>
+        <div class="hazard-stat text-green" data-lang="hazard.level.low">Low levels</div>
+        <div class="hazard-detail text-muted" data-lang="hazard.all">All districts</div>
+      </div>
+      <div class="glass-card hazard-card reveal" data-delay="300">
+        <div class="hazard-icon">❄️</div>
+        <div class="hazard-name" data-lang="hazard.frost">Frost</div>
+        <div class="hazard-stat text-amber">5 <span data-lang="hazard.districts">Districts</span></div>
+        <div class="hazard-detail text-muted" data-lang="hazard.level.high">HIGH level</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: District Detail -->
+  <div class="risk-right">
+    <!-- Detail panel -->
+    <div class="glass-card district-detail-panel" id="district-detail" style="display:none">
+      <div class="detail-header">
+        <div>
+          <h3 id="detail-name">Dehradun</h3>
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+            <span id="detail-badge" class="badge badge-green">LOW RISK</span>
+            <span class="text-muted" style="font-size:0.8rem">Overall:</span>
+            <span id="detail-overall" class="text-green" style="font-weight:800;font-size:1.1rem">28%</span>
+          </div>
+        </div>
+        <div class="detail-ring-hint text-muted" style="font-size:0.75rem;text-align:right">Radar<br>Chart ↓</div>
+      </div>
+
+      <!-- Hazard Bars -->
+      <div class="hazard-bars">
+        <h4 style="font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem" data-lang="dash.risk">Hazard Breakdown</h4>
+        <div class="hazard-bar-row">
+          <div class="hazard-bar-label"><span>⛰️</span><span data-lang="hazard.landslide">Landslide</span></div>
+          <div class="progress-bar" style="height:8px;flex:1"><div class="progress-fill" id="bar-landslide" style="width:0%"></div></div>
+          <span id="score-landslide" class="hazard-bar-score">0%</span>
+        </div>
+        <div class="hazard-bar-row">
+          <div class="hazard-bar-label"><span>🌊</span><span data-lang="hazard.flood">Flood</span></div>
+          <div class="progress-bar" style="height:8px;flex:1"><div class="progress-fill" id="bar-flood" style="width:0%;background:#4a9eff;box-shadow:0 0 8px #4a9eff50"></div></div>
+          <span id="score-flood" class="hazard-bar-score">0%</span>
+        </div>
+        <div class="hazard-bar-row">
+          <div class="hazard-bar-label"><span>☀️</span><span data-lang="hazard.drought">Drought</span></div>
+          <div class="progress-bar" style="height:8px;flex:1"><div class="progress-fill" id="bar-drought" style="width:0%;background:#f5a623;box-shadow:0 0 8px #f5a62350"></div></div>
+          <span id="score-drought" class="hazard-bar-score">0%</span>
+        </div>
+        <div class="hazard-bar-row">
+          <div class="hazard-bar-label"><span>❄️</span><span data-lang="hazard.frost">Frost</span></div>
+          <div class="progress-bar" style="height:8px;flex:1"><div class="progress-fill" id="bar-frost" style="width:0%;background:#7dd3fc;box-shadow:0 0 8px #7dd3fc50"></div></div>
+          <span id="score-frost" class="hazard-bar-score">0%</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="detail-insurance">
+        <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+          <h4 style="font-size:0.85rem" data-lang="footer.h.schemes">🛡️ Recommended Insurance</h4>
+        </div>
+        <p class="text-green" id="detail-insurance" style="font-weight:600;font-size:0.92rem">PMFBY</p>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Advisory -->
+      <div class="detail-advisory-box glass-card" style="padding:1rem;border-radius:var(--r-m)">
+        <h4 style="font-size:0.85rem;margin-bottom:0.5rem" data-lang="dash.quick.advice">📋 AI Advisory</h4>
+        <p id="detail-advisory" style="font-size:0.85rem;line-height:1.6;color:var(--text-secondary)"></p>
+      </div>
+    </div>
+
+    <!-- Radar Chart -->
+    <div class="glass-card radar-panel">
+      <div class="panel-header">
+        <h3 data-lang="risk.radar.title">📊 Risk Radar</h3>
+        <span class="badge badge-red" data-lang="risk.badge.multi">Multi-hazard</span>
+      </div>
+      <div class="chart-container" style="height:260px">
+        <canvas id="riskRadarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Satellite Panel -->
+    <div class="glass-card satellite-panel" id="satellite-panel">
+      <div class="sat-scanning">
+        <div class="sat-label text-muted" style="font-size:0.9rem;text-align:center;padding:2rem" data-lang="risk.sat.hint">
+          👆 Select a district to view satellite data
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Insurance Schemes ─────────────────────────────── -->
+<section style="padding:0 4% 80px">
+  <div class="section-header reveal">
+    <div class="section-label" data-lang="footer.h.schemes">🛡️ Government Schemes</div>
+    <h2 data-lang="dash.quick.finance">Climate Finance & Insurance</h2>
+    <p data-lang="risk.insurance.desc">Available protection schemes for climate-risk farmers in Uttarakhand</p>
+  </div>
+  <div class="grid-4" id="insurance-cards"></div>
+</section>
+
+<footer>
+  <div class="footer-bottom">
+    <span data-lang="footer.copy">© 2026 KrishiMitra</span>
+    <span data-lang="risk.footer.sat">🛰️ Risk data updated from satellite every 2 hours</span>
+  </div>
+</footer>
+
+
+<script src="js/main_v25.js"></script>
+<script src="js/climate-risk.js"></script>
+
+<style>
+.risk-header {
+  padding: calc(var(--nav-h) + 40px) 4% 0;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+}
+.dash-breadcrumb { font-size: 0.82rem; color: var(--text-muted); }
+
+.risk-main {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 2rem;
+  padding: 0 4% 3rem;
+  align-items: start;
+}
+.risk-left, .risk-right { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.risk-map-panel { padding: 1.8rem; }
+
+/* District Grid */
+.district-risk-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.district-cell {
+  border-radius: var(--r-m);
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.district-cell:hover { transform: scale(1.06); }
+.district-cell.selected {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
+  transform: scale(1.05);
+}
+.district-cell-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.district-cell-score {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.district-cell-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Legend */
+.risk-legend-inline {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.legend-item span {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Hazard overview */
+.hazard-overview-grid { margin-top: 0; }
+.hazard-card {
+  padding: 1.3rem;
+  text-align: center;
+}
+.hazard-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+.hazard-name { font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.hazard-stat { font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700; margin-top: 4px; }
+.hazard-detail { font-size: 0.72rem; margin-top: 2px; }
+
+/* Detail Panel */
+.district-detail-panel { padding: 1.8rem; }
+.detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+.hazard-bars { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1rem; }
+.hazard-bar-row { display: flex; align-items: center; gap: 10px; }
+.hazard-bar-label {
+  width: 90px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+.hazard-bar-score {
+  width: 36px;
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.detail-advisory-box { background: rgba(0,0,0,0.2) !important; }
+
+/* Radar & Satellite */
+.radar-panel, .satellite-panel { padding: 1.8rem; }
+.sat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.sat-metric { text-align: center; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: var(--r-m); border: 1px solid var(--border); }
+.sat-metric-value { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 800; line-height: 1; }
+.sat-metric-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+.sat-title { font-size: 0.9rem; font-weight: 600; }
+.sat-timestamp { font-size: 0.75rem; margin-top: 0.75rem; }
+.sat-scanning { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 1rem 0; }
+.sat-spinner { font-size: 2rem; animation: float 2s ease-in-out infinite; }
+
+/* Insurance cards */
+.insurance-card {
+  padding: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.insurance-icon { font-size: 2rem; }
+
+@media (max-width: 1024px) {
+  .risk-main { grid-template-columns: 1fr; }
+  .district-risk-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .district-risk-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('[PWA] Service Worker registered'))
+        .catch(err => console.error('[PWA] Service Worker failed', err));
+    });
+  }
+</script>
+</body>
+</html>

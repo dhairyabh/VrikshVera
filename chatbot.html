@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiMitra AI Assistant — Multilingual Crop Doctor</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="stylesheet" href="css/style_v25.css">
+  <link rel="stylesheet" href="css/animations_v25.css">
+  <link rel="stylesheet" href="css/chatbot.css">
+</head>
+<body class="chatbot-page">
+
+<div id="page-overlay"></div>
+
+<!-- ── Navbar ─────────────────────────────────────────── -->
+<nav class="navbar scrolled">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🌿</div>
+    <span class="nav-logo-text">Krishi<span>Mitra</span></span>
+  </a>
+      <div class="nav-links">
+        <a href="index.html" data-lang="nav.home">Home</a>
+        <a href="dashboard.html" data-lang="nav.dashboard">Dashboard</a>
+        <a href="crop-advisor.html" data-lang="nav.advisor">Crop Advisor</a>
+        <a href="climate-risk.html" data-lang="nav.risk">Climate Risk</a>
+        <a href="chatbot.html" class="active" data-lang="nav.chatbot">AI Chatbot</a>
+        <button class="lang-toggle" id="lang-btn" data-lang="lang.label">🌐 हिंदी</button>
+        <a href="dashboard.html" class="nav-cta" data-lang="nav.cta">Open Dashboard →</a>
+      </div>
+</nav>
+
+<!-- ── Chat Main Layout ──────────────────────────────────── -->
+<main class="chatbot-container">
+  
+  <!-- Sidebar -->
+  <aside class="chatbot-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-bot-avatar">🤖</div>
+      <h3>KrishiMitra AI</h3>
+      <p data-lang="bot.sidebar.desc">Your 24/7 Digital Crop Doctor. Expert advice in your language.</p>
+    </div>
+
+    <div class="lang-selector-section">
+      <label data-lang="bot.sidebar.select">Select Language</label>
+      <div class="lang-chips">
+        <div class="lang-chip active" data-lang="en" data-lang-key="English">English</div>
+        <div class="lang-chip" data-lang="hi" data-lang-key="Hindi">हिंदी (Hindi)</div>
+      </div>
+    </div>
+
+    <div class="quick-topics-section">
+      <h4 data-lang="bot.sidebar.topics">Quick Topics</h4>
+      <button class="topic-btn">
+        <div class="topic-icon">🐛</div>
+        <span data-lang="bot.topic.pest">Pest problems</span>
+      </button>
+      <button class="topic-btn">
+        <div class="topic-icon">🍂</div>
+        <span data-lang="bot.topic.yellow">Yellow leaves</span>
+      </button>
+      <button class="topic-btn">
+        <div class="topic-icon">💧</div>
+        <span data-lang="bot.topic.irrigation">Irrigation help</span>
+      </button>
+      <button class="topic-btn">
+        <div class="topic-icon">🛡️</div>
+        <span data-lang="bot.topic.schemes">Govt Schemes</span>
+      </button>
+      <button class="topic-btn">
+        <div class="topic-icon">📅</div>
+        <span data-lang="bot.topic.calendar">Crop Calendar</span>
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="status-indicator">
+        <div class="status-dot"></div>
+        <div class="status-bar" data-lang="bot.sidebar.status">AI Engine: Active (v2.5)</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Chat Area -->
+  <section class="chat-main">
+    <header class="chat-header">
+      <div class="chat-header-info">
+        <div class="chat-bot-avatar-sm">🌿</div>
+        <div class="chat-header-text">
+          <h4 id="bot-name-display" data-lang="bot.header.name">Agriculture Assistant</h4>
+          <p data-lang="bot.header.status">Online • Multi-District Support</p>
+        </div>
+      </div>
+      <div class="chat-header-actions">
+        <div class="header-action-btn" title="Voice Support">🎙️</div>
+        <div class="header-action-btn" title="Clear Chat">🗑️</div>
+      </div>
+    </header>
+
+    <div class="chat-bg-orbs">
+      <div class="chat-orb chat-orb-1"></div>
+      <div class="chat-orb chat-orb-2"></div>
+    </div>
+
+    <div class="chat-messages" id="chat-messages">
+      <!-- Welcome Banner -->
+      <div class="welcome-banner">
+        <div class="welcome-bot-icon">👨‍🌾</div>
+        <h2 data-lang="bot.welcome.title">Welcome to KrishiMitra Chat</h2>
+        <p data-lang="bot.welcome.desc">Expert agriculture advice tailored for Uttarakhand farmers. Upload images of your crops to detect diseases instantly.</p>
+        <div class="welcome-chips">
+          <div class="welcome-chip" data-lang="bot.suggest.yellow">"My wheat leaves are turning yellow"</div>
+          <div class="welcome-chip" data-lang="bot.suggest.pest">"Pests in my rice field"</div>
+          <div class="welcome-chip" data-lang="bot.suggest.irrigation">"When to irrigate apple trees?"</div>
+        </div>
+      </div>
+
+      <!-- Messages will appear here -->
+    </div>
+
+    <!-- Input Area -->
+    <footer class="chat-input-wrapper">
+      <div class="image-preview-strip" id="image-preview-strip">
+        <!-- Preview thumbs go here -->
+      </div>
+
+      <div class="chat-input-row">
+        <label for="image-upload" class="input-action-btn" title="Upload Crop Image">
+          📷
+          <input type="file" id="image-upload" accept="image/*" hidden multiple>
+        </label>
+        
+        <button class="input-action-btn" id="voice-btn" title="Voice Input">🎙️</button>
+        
+        <textarea id="user-input" class="chat-input-box" placeholder="Describe your farm problem..." rows="1"></textarea>
+        
+        <button class="send-btn" id="send-btn">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
+        </button>
+      </div>
+      
+      <p class="input-hint" data-lang="bot.input.hint">AI results are for advisory purposes. Consult local experts for critical decisions.</p>
+    </footer>
+
+    <!-- Hidden drop zone -->
+    <div class="upload-zone" id="drop-zone">
+      <div class="upload-zone-icon">📥</div>
+      <h3>Drop Crop Images Here</h3>
+      <p>Analyze diseases instantly</p>
+    </div>
+  </section>
+
+</main>
+
+<script src="js/main_v25.js"></script>
+<script src="js/chatbot_v25.js"></script>
+
+</body>
+</html>

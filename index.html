@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KrishiMitra — AI Climate Intelligence for Farmers</title>
+  <meta name="description"
+    content="Hyper-localized AI-powered agricultural advisories for smallholder farmers in Uttarakhand. Satellite data, weather forecasts, and crop models.">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style_v25.css">
+  <link rel="stylesheet" href="css/animations_v25.css">
+</head>
+
+<body>
+
+  <div id="page-overlay"></div>
+
+  <!-- ── Navbar ─────────────────────────────────────────── -->
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🌿</div>
+      <span class="nav-logo-text">Krishi<span>Mitra</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="index.html" class="active" data-lang="nav.home">Home</a>
+      <a href="dashboard.html" data-lang="nav.dashboard">Dashboard</a>
+      <a href="crop-advisor.html" data-lang="nav.advisor">Crop Advisor</a>
+      <a href="climate-risk.html" data-lang="nav.risk">Climate Risk</a>
+      <a href="chatbot.html" data-lang="nav.chatbot">AI Chatbot</a>
+      <button class="lang-toggle" id="lang-btn" data-lang="lang.label">🌐 हिंदी</button>
+      <a href="dashboard.html" class="nav-cta" data-lang="nav.cta">Open Dashboard →</a>
+    </div>
+  </nav>
+
+  <!-- ── Hero ────────────────────────────────────────────── -->
+  <section class="hero-section" id="home">
+    <!-- All background layers isolated in one wrapper -->
+    <div class="hero-bg-wrap">
+      <div class="orb orb-green" style="width:600px;height:600px;top:-100px;left:-150px;opacity:0.7"></div>
+      <div class="orb orb-amber" style="width:400px;height:400px;top:200px;right:-100px;opacity:0.5"></div>
+      <div class="orb orb-blue" style="width:350px;height:350px;bottom:0;left:40%;opacity:0.4"></div>
+      <img src="assets/hero_bg.png" alt="Satellite farmland" class="hero-bg-img">
+      <div class="hero-bg-overlay"></div>
+    </div>
+
+    <canvas id="hero-canvas"></canvas>
+
+    <div class="hero-content">
+      <div class="animate-fade-up delay-1">
+        <span class="section-label" data-lang="hero.badge">🛰️ AI Climate Intelligence</span>
+      </div>
+      <h1 class="hero-title animate-fade-up delay-2" data-lang="hero.title">
+        Hyper-Local Climate<br>
+        <span class="gradient-text">Intelligence for</span><br>
+        Every Farmer
+      </h1>
+      <p class="hero-subtitle animate-fade-up delay-3" data-lang="hero.subtitle">
+        Bridging satellite data, weather forecasts, and AI crop models to deliver actionable,
+        localized advisories for smallholder farmers in Uttarakhand and climate-sensitive regions.
+      </p>
+      <div class="hero-actions animate-fade-up delay-4">
+        <a href="dashboard.html" class="btn btn-primary btn-lg" data-lang="hero.cta">Explore Dashboard →</a>
+        <a href="crop-advisor.html" class="btn btn-outline btn-lg" data-lang="hero.cta2">Get Crop Advice</a>
+      </div>
+      <div class="hero-dots animate-fade-up delay-5">
+        <div class="data-dot"></div>
+        <div class="data-dot"></div>
+        <div class="data-dot"></div>
+        <span style="font-size:0.8rem;color:var(--text-muted);margin-left:6px" data-lang="hero.info">Live data • 13
+          Uttarakhand districts • Updated every 30min</span>
+      </div>
+    </div>
+
+    <div class="hero-scroll-indicator animate-fade-up delay-6">
+      <div class="scroll-line"></div>
+      <span data-lang="hero.scroll">Scroll to explore</span>
+    </div>
+  </section>
+
+
+  <!-- ── Stats ────────────────────────────────────────────── -->
+  <section class="stats-section">
+    <div class="stats-bar glass-card">
+      <div class="stat-block reveal" data-delay="0">
+        <span class="stat-number" data-count="13" data-suffix="">0</span>
+        <span class="stat-label" data-lang="index.stat1.label">Districts Covered</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block reveal" data-delay="100">
+        <span class="stat-number" data-count="35" data-suffix="">0</span>
+        <span class="stat-label" data-lang="index.stat2.label">Crop Varieties</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block reveal" data-delay="200">
+        <span class="stat-number" data-count="247" data-suffix="+">0</span>
+        <span class="stat-label" data-lang="index.stat3.label">Risk Alerts Issued</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block reveal" data-delay="300">
+        <span class="stat-number" data-count="89" data-suffix="%">0</span>
+        <span class="stat-label" data-lang="index.stat4.label">Advisory Accuracy</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-block reveal" data-delay="400">
+        <span class="stat-number" data-count="4800" data-suffix="+">0</span>
+        <span class="stat-label" data-lang="index.stat5.label">Farmers Served</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Features ─────────────────────────────────────────── -->
+  <section class="section" id="features">
+    <div class="section-header reveal">
+      <div class="section-label" data-lang="index.features.tag">🚀 Platform Features</div>
+      <h2 data-lang="index.features.title">Six Pillars of Climate-Smart Farming</h2>
+      <p data-lang="index.features.desc">Designed around the six key innovation areas of the AgriTech challenge</p>
+    </div>
+
+    <div class="grid-3" style="gap:1.5rem">
+      <div class="glass-card feature-card tilt-card reveal" data-delay="0">
+        <div class="feature-icon">🤖</div>
+        <h3 data-lang="index.feat1.title">AI Crop Forecasting</h3>
+        <p data-lang="index.feat1.desc">ML-powered suitability scoring for 35 major crops. Matches soil type, season,
+          and climate data to recommend the best variety for your farm.</p>
+        <div class="feature-tag"><span class="badge badge-green">AI Powered</span></div>
+      </div>
+      <div class="glass-card feature-card tilt-card reveal" data-delay="100">
+        <div class="feature-icon">🛰️</div>
+        <h3 data-lang="index.feat2.title">Satellite Risk Prediction</h3>
+        <p data-lang="index.feat2.desc">Real-time NDVI, soil moisture, and flood probability from satellite feeds.
+          Instant risk alerts for landslide, drought, and extreme rainfall.</p>
+        <div class="feature-tag"><span class="badge badge-green">Live Data</span></div>
+      </div>
+      <div class="glass-card feature-card tilt-card reveal" data-delay="200">
+        <div class="feature-icon">🛡️</div>
+        <h3 data-lang="index.feat3.title">Climate Finance & Insurance</h3>
+        <p data-lang="index.feat3.desc">Integrated PMFBY, WBCIS, and RWBCIS scheme advisor. District-wise insurance
+          eligibility and claim guidance at your fingertips.</p>
+        <div class="feature-tag"><span class="badge badge-amber">Govt Schemes</span></div>
+      </div>
+      <div class="glass-card feature-card tilt-card reveal" data-delay="100">
+        <div class="feature-icon">🎙️</div>
+        <h3 data-lang="index.feat4.title">Voice Advisory</h3>
+        <p data-lang="index.feat4.desc">Multilingual voice advisories in Hindi and English. Crop recommendations spoken
+          aloud for farmers with low literacy or visual impairments.</p>
+        <div class="feature-tag"><span class="badge badge-green">Hindi + English</span></div>
+      </div>
+      <div class="glass-card feature-card tilt-card reveal" data-delay="200">
+        <div class="feature-icon">📶</div>
+        <h3 data-lang="index.feat5.title">Offline-First Architecture</h3>
+        <p data-lang="index.feat5.desc">PWA-enabled platform with offline data caching. Core advisories function without
+          internet — crucial for remote Himalayan villages.</p>
+        <div class="feature-tag"><span class="badge badge-amber">PWA Enabled</span></div>
+      </div>
+      <div class="glass-card feature-card tilt-card reveal" data-delay="300">
+        <div class="feature-icon">📊</div>
+        <h3 data-lang="index.feat6.title">Hyper-Local Analytics</h3>
+        <p data-lang="index.feat6.desc">Down to district-level climate granularity. 7-day forecasts, crop calendars, and
+          soil health dashboards for 13 Uttarakhand districts.</p>
+        <div class="feature-tag"><span class="badge badge-green">13 Districts</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How It Works ──────────────────────────────────────── -->
+  <section class="section how-section" id="how">
+    <div class="how-bg-orb"></div>
+    <div class="section-header text-center reveal" style="max-width:600px;margin:0 auto 4rem">
+      <div class="section-label" data-lang="index.how.tag">⚙️ How It Works</div>
+      <h2 data-lang="index.how.title">From Satellite to Farm Advisory</h2>
+      <p data-lang="index.how.desc">Three-step intelligence pipeline delivering real-time insights</p>
+    </div>
+
+    <div class="steps-flow">
+      <div class="step reveal" data-delay="0">
+        <div class="step-number">1</div>
+        <div class="step-content glass-card">
+          <h3 data-lang="index.step1.title">🌍 Data Ingestion</h3>
+          <p data-lang="index.step1.desc">Satellite imagery (NDVI, moisture), NOAA/IMD weather feeds, and government
+            soil health card data are aggregated in real-time.</p>
+          <div class="step-tags">
+            <span class="badge badge-green" data-lang="index.feat.sat">Satellite</span>
+            <span class="badge badge-green" data-lang="index.feat.api">Weather API</span>
+            <span class="badge badge-green" data-lang="index.feat.soil">Soil Data</span>
+          </div>
+        </div>
+      </div>
+      <div class="step-connector reveal" data-delay="150"></div>
+      <div class="step reveal" data-delay="200">
+        <div class="step-number">2</div>
+        <div class="step-content glass-card">
+          <h3 data-lang="index.step2.title">🧠 AI Analysis</h3>
+          <p data-lang="index.step2.desc">ML models compute crop suitability, climate risk scores, and predictive
+            advisories using geospatial intelligence and crop phenology models.</p>
+          <div class="step-tags">
+            <span class="badge badge-amber" data-lang="index.feat.ml">ML Engine</span>
+            <span class="badge badge-amber" data-lang="index.feat.risk">Risk Scoring</span>
+            <span class="badge badge-amber" data-lang="index.feat.forecast">Forecasting</span>
+          </div>
+        </div>
+      </div>
+      <div class="step-connector reveal" data-delay="350"></div>
+      <div class="step reveal" data-delay="400">
+        <div class="step-number">3</div>
+        <div class="step-content glass-card">
+          <h3 data-lang="index.step3.title">📲 Farmer Advisory</h3>
+          <p data-lang="index.step3.desc">Hyper-localized recommendations delivered via dashboard, voice advisory
+            (Hindi/English), and offline-capable PWA for remote areas.</p>
+          <div class="step-tags">
+            <span class="badge badge-green" data-lang="index.feat.dash">Dashboard</span>
+            <span class="badge badge-green" data-lang="index.feat.voice">Voice</span>
+            <span class="badge badge-green" data-lang="index.feat.offline">Offline</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Districts ─────────────────────────────────────────── -->
+  <section class="section districts-section" id="coverage">
+    <div class="section-header reveal">
+      <div class="section-label" data-lang="index.districts.tag">📍 Coverage</div>
+      <h2 data-lang="index.districts.title">All 13 Uttarakhand Districts</h2>
+      <p data-lang="index.districts.desc">Complete climate intelligence across every district of Uttarakhand</p>
+    </div>
+    <div class="districts-grid">
+      <div class="district-pill reveal" data-delay="0">🏔️ <span data-lang="dist.Uttarkashi">Uttarkashi</span></div>
+      <div class="district-pill reveal" data-delay="50">🌿 <span data-lang="dist.Chamoli">Chamoli</span></div>
+      <div class="district-pill reveal" data-delay="100">⛰️ <span data-lang="dist.Rudraprayag">Rudraprayag</span></div>
+      <div class="district-pill reveal" data-delay="150">🌾 <span data-lang="dist.Tehri">Tehri</span></div>
+      <div class="district-pill reveal" data-delay="200">🏙️ <span data-lang="dist.Dehradun">Dehradun</span></div>
+      <div class="district-pill reveal" data-delay="250">🌊 <span data-lang="dist.Haridwar">Haridwar</span></div>
+      <div class="district-pill reveal" data-delay="300">🏔️ <span data-lang="dist.Pauri">Pauri</span></div>
+      <div class="district-pill reveal" data-delay="350">🍎 <span data-lang="dist.Nainital">Nainital</span></div>
+      <div class="district-pill reveal" data-delay="400">🌿 <span data-lang="dist.Almora">Almora</span></div>
+      <div class="district-pill reveal" data-delay="450">🫘 <span data-lang="dist.Bageshwar">Bageshwar</span></div>
+      <div class="district-pill reveal" data-delay="500">❄️ <span data-lang="dist.Pithoragarh">Pithoragarh</span></div>
+      <div class="district-pill reveal" data-delay="550">🌱 <span data-lang="dist.Champawat">Champawat</span></div>
+      <div class="district-pill reveal" data-delay="600">🌾 <span data-lang="dist.US Nagar">US Nagar</span></div>
+    </div>
+  </section>
+
+  <!-- ── CTA ───────────────────────────────────────────────── -->
+  <section class="section cta-section">
+    <div class="cta-card glass-card reveal">
+      <div class="cta-orb orb-green"></div>
+      <div class="cta-orb cta-orb-2 orb-amber"></div>
+      <h2 data-lang="index.cta.title">Ready to Protect Your Farm?</h2>
+      <p data-lang="index.cta.desc">Join thousands of farmers using AI-powered climate intelligence to make smarter
+        decisions.</p>
+      <div class="cta-actions">
+        <a href="dashboard.html" class="btn btn-primary btn-lg" data-lang="index.cta.btn1">View Dashboard →</a>
+        <a href="crop-advisor.html" class="btn btn-outline btn-lg" data-lang="index.cta.btn2">Get Crop Advice</a>
+      </div>
+      <div class="cta-badges">
+        <span class="badge badge-green" data-lang="badge.free">✅ Free for Farmers</span>
+        <span class="badge badge-amber" data-lang="badge.offline">📱 Offline Capable</span>
+        <span class="badge badge-green" data-lang="badge.voice">🎙️ Hindi Voice Support</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ────────────────────────────────────────────── -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo" style="text-decoration:none;display:inline-flex">
+          <div class="nav-logo-icon">🌿</div>
+          <span class="nav-logo-text">Krishi<span>Mitra</span></span>
+        </a>
+        <p data-lang="footer.brand.desc">AI-powered climate intelligence platform for smallholder farmers in
+          climate-sensitive regions.</p>
+      </div>
+      <div class="footer-col">
+        <h4 data-lang="footer.h.platform">Platform</h4>
+        <ul>
+          <li><a href="dashboard.html" data-lang="nav.dashboard">Dashboard</a></li>
+          <li><a href="crop-advisor.html" data-lang="nav.advisor">Crop Advisor</a></li>
+          <li><a href="climate-risk.html" data-lang="nav.risk">Climate Risk</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4 data-lang="footer.h.coverage">Coverage</h4>
+        <ul>
+          <li><a href="#" data-lang="footer.l.uttarakhand">Uttarakhand</a></li>
+          <li><a href="#" data-lang="footer.l.districts">13 Districts</a></li>
+          <li><a href="#" data-lang="footer.l.satellite">Satellite Data</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4 data-lang="footer.h.schemes">Schemes</h4>
+        <ul>
+          <li><a href="#" data-lang="footer.l.pmfby">PMFBY</a></li>
+          <li><a href="#" data-lang="footer.l.wbcis">WBCIS</a></li>
+          <li><a href="#" data-lang="footer.l.kisan">Kisan Credit</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span data-lang="footer.copy">© 2026 KrishiMitra. Built for Hackathon 9.0</span>
+      <span data-lang="footer.stats">🛰️ Making every farmer climate-smart</span>
+    </div>
+  </footer>
+
+
+  <script src="js/main_v25.js"></script>
+
+  <style>
+    /* ── Hero page-specific styles ─── */
+    .hero-section {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: calc(var(--nav-h) + 60px) 5% 80px;
+    }
+
+    /* All bg layers in one isolated container */
+    .hero-bg-wrap {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .hero-bg-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.58;
+      z-index: 0;
+    }
+
+    .hero-bg-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(2, 8, 16, 0.80) 0%, rgba(5, 13, 26, 0.65) 50%, rgba(2, 8, 16, 0.82) 100%);
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 700px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.8rem, 6vw, 5.5rem);
+      margin: 1rem 0;
+      line-height: 1.08;
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      margin: 1.5rem 0 2.5rem;
+      max-width: 560px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 2rem;
+    }
+
+    .hero-scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      z-index: 2;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 50px;
+      background: linear-gradient(to bottom, var(--green-glow), transparent);
+      animation: float 2s ease-in-out infinite;
+    }
+
+    /* Stats bar */
+    .stats-section {
+      padding: 0 5% 80px;
+      margin-top: -40px;
+    }
+
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 2rem;
+      border-radius: var(--r-xl);
+    }
+
+    .stat-divider {
+      width: 1px;
+      height: 50px;
+      background: var(--border);
+    }
+
+    /* How section */
+    .how-section {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .how-bg-orb {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0, 229, 113, 0.05) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .steps-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+
+    .step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      flex: 1;
+      max-width: 320px;
+    }
+
+    .step-content {
+      padding: 2rem;
+      width: 100%;
+    }
+
+    .step-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .step-connector {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--green-glow), transparent, var(--green-glow));
+      flex-shrink: 0;
+      position: relative;
+      top: -40px;
+    }
+
+    /* Districts */
+    .districts-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    .district-pill {
+      padding: 10px 20px;
+      background: var(--green-dim);
+      border: 1px solid rgba(0, 229, 113, 0.2);
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: default;
+      transition: all 0.3s;
+    }
+
+    .district-pill:hover {
+      background: rgba(0, 229, 113, 0.2);
+      color: var(--green-glow);
+      transform: translateY(-3px);
+      box-shadow: var(--glow-green);
+    }
+
+    /* CTA */
+    .cta-section {
+      padding-bottom: 120px;
+    }
+
+    .cta-card {
+      text-align: center;
+      padding: 5rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-orb {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+
+    .cta-orb-green {
+      top: -100px;
+      left: -100px;
+      background: radial-gradient(circle, rgba(0, 229, 113, 0.15), transparent 70%);
+    }
+
+    .cta-orb-2 {
+      bottom: -100px;
+      right: -100px;
+      background: radial-gradient(circle, rgba(245, 166, 35, 0.12), transparent 70%);
+    }
+
+    .cta-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+
+    .cta-badges {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .feature-tag {
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .steps-flow {
+        flex-direction: column;
+      }
+
+      .step-connector {
+        width: 2px;
+        height: 50px;
+        top: 0;
+        background: linear-gradient(180deg, var(--green-glow), transparent);
+      }
+
+      .stats-bar {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .stat-divider {
+        width: 100%;
+        height: 1px;
+      }
+    }
+  </style>
+
+  <script>
+    // Force unregister all old service workers to clear stale cache
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for(let registration of registrations) { registration.unregister(); }
+        console.log('[PWA] All service workers cleared. Reloading...');
+      });
+    }
+  </script>
+</body>
+
+</html>

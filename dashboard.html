@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — KrishiMitra Climate Intelligence</title>
+  <meta name="description" content="Live climate dashboard for Uttarakhand districts. Weather data, risk alerts, crop calendar, and NDVI index.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style_v25.css">
+  <link rel="stylesheet" href="css/animations_v25.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div id="page-overlay"></div>
+
+<!-- ── Navbar ─────────────────────────────────────────── -->
+<nav class="navbar scrolled">
+  <a href="index.html" class="nav-logo">
+    <div class="nav-logo-icon">🌿</div>
+    <span class="nav-logo-text">Krishi<span>Mitra</span></span>
+  </a>
+      <div class="nav-links">
+        <a href="index.html" data-lang="nav.home">Home</a>
+        <a href="dashboard.html" class="active" data-lang="nav.dashboard">Dashboard</a>
+        <a href="crop-advisor.html" data-lang="nav.advisor">Crop Advisor</a>
+        <a href="climate-risk.html" data-lang="nav.risk">Climate Risk</a>
+        <a href="chatbot.html" data-lang="nav.chatbot">AI Chatbot</a>
+        <button class="lang-toggle" id="lang-btn" data-lang="lang.label">🌐 हिंदी</button>
+        <a href="dashboard.html" class="nav-cta" data-lang="nav.cta">Open Dashboard →</a>
+      </div>
+</nav>
+
+<!-- ── Dashboard Main ─────────────────────────────────── -->
+<main class="dashboard-main">
+  <!-- Header -->
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <div class="orb orb-green" style="width:400px;height:400px;top:-150px;left:-150px"></div>
+      <p class="dash-breadcrumb">🏠 <a href="home.html" style="color:inherit;text-decoration:none"><span data-lang="nav.home">Home</span></a> / <span class="text-green" data-lang="nav.dashboard">Dashboard</span></p>
+      <h1 data-lang="dash.title">Climate Dashboard <span id="selected-district" class="gradient-text">Dehradun</span></h1>
+      <div class="dash-meta">
+        <span id="live-clock" class="badge badge-green">--:--:--</span>
+        <span id="refresh-indicator" class="badge badge-green" style="gap:4px">✅ Live</span>
+        <span id="risk-badge" class="badge badge-green" data-lang="dash.risk.low">🟢 Low Risk</span>
+        <span class="badge badge-amber" data-lang="badge.offline">📶 Offline Ready</span>
+      </div>
+    </div>
+    <div class="dash-district-select">
+      <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:6px" data-lang="form.district.label">Select District</label>
+      <div class="select-wrapper">
+        <select id="district-select" style="min-width:200px"></select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weather Cards -->
+  <div class="grid-4 weather-cards-grid">
+    <div class="glass-card weather-card scanline-container reveal" data-delay="0">
+      <div class="wcard-icon">🌡️</div>
+      <div class="wcard-label" data-lang="dash.label.temp">Temperature</div>
+      <div class="wcard-value" id="val-temp">--</div>
+      <div class="wcard-sub text-muted" data-lang="dash.sub.temp">Current Avg</div>
+    </div>
+    <div class="glass-card weather-card scanline-container reveal" data-delay="100">
+      <div class="wcard-icon">💧</div>
+      <div class="wcard-label" data-lang="dash.label.humidity">Humidity</div>
+      <div class="wcard-value" id="val-humidity">--</div>
+      <div class="wcard-sub text-muted" data-lang="dash.sub.humidity">Relative %</div>
+    </div>
+    <div class="glass-card weather-card scanline-container reveal" data-delay="200">
+      <div class="wcard-icon">🌧️</div>
+      <div class="wcard-label" data-lang="dash.label.rainfall">Rainfall</div>
+      <div class="wcard-value" id="val-rainfall">--</div>
+      <div class="wcard-sub text-muted" data-lang="dash.sub.rainfall">7-day avg mm</div>
+    </div>
+    <div class="glass-card weather-card scanline-container reveal" data-delay="300">
+      <div class="wcard-icon">💨</div>
+      <div class="wcard-label" data-lang="dash.label.wind">Wind Speed</div>
+      <div class="wcard-value" id="val-wind">--</div>
+      <div class="wcard-sub text-muted" data-lang="dash.sub.wind">km/h</div>
+    </div>
+  </div>
+
+  <!-- Middle Section -->
+  <div class="dash-middle">
+    <!-- Chart Panel -->
+    <div class="glass-card dash-chart-panel reveal" data-delay="0">
+      <div class="panel-header">
+        <div>
+          <h3 data-lang="dash.weather">7-Day Climate Trend</h3>
+          <p class="text-muted" style="font-size:0.82rem" data-lang="dash.weather.sub">Temperature & Rainfall forecast</p>
+        </div>
+        <div class="flex gap-1">
+          <span class="data-dot"></span>
+          <span class="data-dot"></span>
+          <span class="data-dot"></span>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="weatherChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Alert Panel -->
+    <div class="glass-card dash-alert-panel reveal" data-delay="150">
+      <div class="panel-header">
+        <h3 data-lang="dash.risk">⚡ Risk Alerts</h3>
+        <span id="risk-badge-small" class="badge badge-green" data-lang="dash.status.active">Active</span>
+      </div>
+      <div class="panel-subheader mt-2" style="font-size:0.75rem;color:var(--text-muted);border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:10px">
+        <span class="text-green">●</span> Module 1: Weather Risk Engine
+      </div>
+      <div id="engine-alerts" style="margin-bottom:15px"></div>
+      <div id="alert-panel"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Section -->
+  <div class="dash-bottom">
+    <!-- NDVI Panel -->
+    <div class="glass-card ndvi-panel reveal" data-delay="0">
+      <div class="panel-header">
+        <h3 data-lang="dash.ndvi.title">🛰️ NDVI & Vegetation</h3>
+        <span class="badge badge-green" data-lang="dash.label.satellite">Satellite</span>
+      </div>
+      <div class="ndvi-display">
+        <div class="ndvi-value-big">
+          <span id="val-ndvi">--</span>
+          <span class="ndvi-unit">/100</span>
+        </div>
+        <div class="ndvi-label text-muted" data-lang="dash.ndvi.label">Vegetation Health Index</div>
+        <div class="progress-bar mt-2" style="height:10px;border-radius:5px">
+          <div class="progress-fill" id="ndvi-bar" style="width:0%"></div>
+        </div>
+        <div class="ndvi-status text-green" style="font-size:0.82rem;margin-top:8px" data-lang="dash.ndvi.success">
+          ✅ Healthy vegetation detected in monitoring zone
+        </div>
+      </div>
+      <div class="ndvi-grid mt-3">
+        <div class="ndvi-metric">
+          <div class="ndvi-m-val text-green">78%</div>
+          <div class="ndvi-m-label" data-lang="dash.metrics.cover">Crop Cover</div>
+        </div>
+        <div class="ndvi-metric">
+          <div class="ndvi-m-val text-amber" id="val-soil">Loamy</div>
+          <div class="ndvi-m-label" data-lang="dash.metrics.soil">Soil Type</div>
+        </div>
+        <div class="ndvi-metric">
+          <div class="ndvi-m-val" style="color:#4a9eff" data-lang="dash.metrics.irrigation">Active</div>
+          <div class="ndvi-m-label" data-lang="dash.metrics.irrigation">Irrigation</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crop Calendar -->
+    <div class="glass-card crop-cal-panel reveal" data-delay="150">
+      <div class="panel-header">
+        <h3 data-lang="dash.calendar.title">📅 Crop Calendar</h3>
+        <span class="badge badge-amber">March</span>
+      </div>
+      <p class="text-muted" style="font-size:0.85rem;margin-bottom:1.2rem" data-lang="dash.calendar.subtitle">Recommended crops for current season in your district:</p>
+      <div id="crop-calendar" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <div class="divider"></div>
+      <div class="calendar-tip glass-card" style="padding:1rem;border-radius:var(--r-m)">
+        <div class="flex gap-1" style="align-items:center;margin-bottom:6px">
+          <span>💡</span>
+          <strong style="font-size:0.85rem" data-lang="dash.tip.title">Seasonal Tip</strong>
+        </div>
+        <p style="font-size:0.82rem" data-lang="dash.tip.text">March is ideal for Rabi harvest & early Kharif preparation. Check soil moisture before sowing.</p>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="glass-card quick-links-panel reveal" data-delay="300">
+      <h3 class="panel-header" data-lang="dash.quick.title">🔗 Quick Actions</h3>
+      <div class="quick-links-list">
+        <a href="crop-advisor.html" class="quick-link-btn">
+          <span data-lang="dash.quick.advice">🤖 Get AI Crop Advice</span>
+          <span class="ql-arrow">→</span>
+        </a>
+        <a href="climate-risk.html" class="quick-link-btn">
+          <span data-lang="dash.quick.risk">⚠️ View Risk Map</span>
+          <span class="ql-arrow">→</span>
+        </a>
+        <a href="chatbot.html" class="quick-link-btn">
+          <span data-lang="dash.quick.chatbot">💬 Ask AI Chatbot</span>
+          <span class="ql-arrow">→</span>
+        </a>
+        <a href="#" class="quick-link-btn">
+          <span data-lang="dash.quick.pmfby">🛡️ Apply for PMFBY</span>
+          <span class="ql-arrow">→</span>
+        </a>
+        <a href="#" class="quick-link-btn">
+          <span data-lang="dash.quick.kcc">💳 Kisan Credit Card</span>
+          <span class="ql-arrow">→</span>
+        </a>
+        <a href="#" class="quick-link-btn">
+          <span data-lang="dash.quick.helpline">📞 Kisan Helpline (1800)</span>
+          <span class="ql-arrow">→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-bottom">
+    <span data-lang="footer.copy">© 2026 KrishiMitra</span>
+    <span data-lang="dash.footer.update">🛰️ Data updates every 30 minutes</span>
+  </div>
+</footer>
+
+
+<script src="js/main_v25.js"></script>
+<script src="js/weather-engine.js"></script>
+<script src="js/dashboard.js"></script>
+
+<style>
+.dashboard-main {
+  min-height: 100vh;
+  padding: calc(var(--nav-h) + 30px) 4% 60px;
+  position: relative;
+}
+.dash-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.dash-header h1 { font-size: clamp(1.8rem, 3vw, 2.5rem); }
+.dash-breadcrumb { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.dash-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+
+.weather-cards-grid { margin-bottom: 1.5rem; }
+
+.weather-card {
+  padding: 1.8rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s;
+}
+.weather-card:hover { transform: translateY(-6px) scale(1.02); }
+.wcard-icon { font-size: 2.2rem; margin-bottom: 0.5rem; }
+.wcard-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.wcard-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: var(--green-glow);
+  text-shadow: 0 0 20px rgba(0,229,113,0.4);
+  margin: 0.4rem 0;
+}
+.wcard-sub { font-size: 0.78rem; }
+
+.dash-middle {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.dash-chart-panel, .dash-alert-panel { padding: 1.8rem; }
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+}
+.panel-header h3 { font-size: 1rem; }
+
+.dash-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 0.9fr;
+  gap: 1.5rem;
+}
+.ndvi-panel, .crop-cal-panel, .quick-links-panel { padding: 1.8rem; }
+
+.ndvi-value-big {
+  font-family: 'Outfit', sans-serif;
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: var(--green-glow);
+  text-shadow: 0 0 30px rgba(0,229,113,0.4);
+  line-height: 1;
+  margin: 1rem 0 0.3rem;
+}
+.ndvi-unit { font-size: 1.2rem; color: var(--text-muted); }
+.ndvi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+.ndvi-metric { text-align: center; }
+.ndvi-m-val { font-family: 'Outfit', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 3px; }
+.ndvi-m-label { font-size: 0.72rem; color: var(--text-muted); }
+
+.quick-links-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.quick-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--r-m);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+.quick-link-btn:hover {
+  background: var(--green-dim);
+  border-color: var(--border-hover);
+  color: var(--green-glow);
+  transform: translateX(4px);
+}
+.ql-arrow { margin-left: auto; transition: transform 0.3s; }
+.quick-link-btn:hover .ql-arrow { transform: translateX(4px); }
+
+.calendar-tip { background: rgba(0,229,113,0.04) !important; border-color: rgba(0,229,113,0.1) !important; }
+
+@media (max-width: 1024px) {
+  .dash-middle { grid-template-columns: 1fr; }
+  .dash-bottom { grid-template-columns: 1fr; }
+}
+</style>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('[PWA] Service Worker registered'))
+        .catch(err => console.error('[PWA] Service Worker failed', err));
+    });
+  }
+</script>
+</body>
+</html>

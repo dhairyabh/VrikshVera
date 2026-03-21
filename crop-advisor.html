@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Advisor — KrishiMitra AI Recommendations</title>
+  <meta name="description"
+    content="AI-powered crop suitability advisor for Uttarakhand farmers. Get the best crop recommendations based on your district, soil, season, and water availability.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style_v25.css">
+  <link rel="stylesheet" href="css/animations_v25.css">
+</head>
+
+<body>
+
+  <div id="page-overlay"></div>
+
+  <!-- ── Navbar ─────────────────────────────────────────── -->
+  <nav class="navbar scrolled">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">🌿</div>
+      <span class="nav-logo-text">Krishi<span>Mitra</span></span>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" data-lang="nav.home">Home</a></li>
+      <li><a href="dashboard.html" data-lang="nav.dashboard">Dashboard</a></li>
+      <li><a href="crop-advisor.html" class="active" data-lang="nav.advisor">Crop Advisor</a></li>
+      <li><a href="climate-risk.html" data-lang="nav.risk">Climate Risk</a></li>
+      <li><a href="chatbot.html" data-lang="nav.chatbot">AI Chatbot</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="lang-toggle" id="lang-btn" data-lang="lang.label">🌐 हिंदी</button>
+    </div>
+  </nav>
+
+  <!-- ── Page Header ────────────────────────────────────── -->
+  <div class="advisor-header">
+    <div class="orb orb-green" style="width:500px;height:500px;top:-200px;right:-100px"></div>
+    <p class="dash-breadcrumb">🏠 <span data-lang="nav.home">Home</span> / <span class="text-green" data-lang="nav.advisor">Crop Advisor</span></p>
+    <h1 data-lang="advisor.title">AI Crop <span class="gradient-text">Suitability Advisor</span></h1>
+    <p style="max-width:560px" data-lang="advisor.subtitle">Our trained Gaussian Naive Bayes model (<strong class="text-green">89% accuracy</strong>) analyses your district's climate, soil type, and water availability to recommend the best crops for maximum yield.</p>
+    <div style="margin-top:1rem;display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+      <span id="model-status" class="badge badge-amber" data-lang="model.loading">⏳ Loading AI model...</span>
+      <span class="badge badge-green" data-lang="model.crops">🌾 35 Crop Classes</span>
+      <span class="badge badge-green" data-lang="model.samples">📊 7,000 Training Samples</span>
+      <span class="badge badge-green" data-lang="model.features">7 Features</span>
+    </div>
+  </div>
+
+  <!-- ── Wizard ─────────────────────────────────────────── -->
+  <div class="advisor-main">
+    <div class="wizard-container glass-card">
+      <!-- Progress Indicators -->
+      <div class="wizard-progress">
+        <div class="step-indicator active" id="si-1">
+          <div class="si-dot">1</div>
+          <span data-lang="wizard.step1">Location & Soil</span>
+        </div>
+        <div class="si-connector"></div>
+        <div class="step-indicator" id="si-2">
+          <div class="si-dot">2</div>
+          <span data-lang="wizard.step2">Season & Water</span>
+        </div>
+        <div class="si-connector"></div>
+        <div class="step-indicator" id="si-3">
+          <div class="si-dot">3</div>
+          <span data-lang="wizard.step3">Get Report</span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="progress-bar" style="height:4px;margin-bottom:2.5rem">
+        <div class="progress-fill" id="progress-bar-fill" style="width:0%;transition:width 0.5s ease"></div>
+      </div>
+
+      <!-- Error -->
+      <div id="form-error" class="alert-item alert-red" style="display:none;margin-bottom:1rem"></div>
+
+      <!-- Step 1 -->
+      <div class="wizard-step active" id="step-1">
+        <h3 class="step-title" data-lang="step1.title">📍 Step 1: Location & Soil Type</h3>
+        <p class="step-desc text-muted" data-lang="step1.desc">Select your district and soil type for climate-matched recommendations</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-lang="form.district.label">District</label>
+            <div class="select-wrapper">
+              <select id="form-district">
+                <option value="" data-lang="form.district.placeholder">Select district...</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label data-lang="form.soil.label">Soil Type</label>
+            <div class="select-wrapper">
+              <select id="form-soil">
+                <option value="" data-lang="form.soil.placeholder">Select soil type...</option>
+                <option value="Loamy" data-lang="soil.loamy">🌿 Loamy — Best for most crops</option>
+                <option value="Clay" data-lang="soil.clay">🏺 Clay — High moisture retention</option>
+                <option value="Sandy" data-lang="soil.sandy">🏜️ Sandy — Fast draining</option>
+                <option value="Alluvial" data-lang="soil.alluvial">🌊 Alluvial — Highly fertile</option>
+                <option value="Silty" data-lang="soil.silty">💧 Silty — Smooth, water-retaining</option>
+                <option value="Rocky" data-lang="soil.rocky">⛰️ Rocky — Mountain terrain</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="step-actions">
+          <button class="btn btn-primary" id="btn-next-1" data-lang="btn.next1">Next: Season & Water →</button>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="wizard-step" id="step-2">
+        <h3 class="step-title" data-lang="step2.title">🌦️ Step 2: Season & Water Availability</h3>
+        <p class="step-desc text-muted" data-lang="step2.desc">Current sowing season and your irrigation capacity</p>
+        <div class="form-row">
+          <div class="form-group">
+            <label data-lang="form.season.label">Sowing Season</label>
+            <div class="select-wrapper">
+              <select id="form-season">
+                <option value="" data-lang="form.season.placeholder">Select season...</option>
+                <option value="kharif" data-lang="season.kharif">🌧️ Kharif — Jun to Nov (Monsoon)</option>
+                <option value="rabi" data-lang="season.rabi">❄️ Rabi — Nov to Apr (Winter)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label data-lang="form.water.label">Water / Irrigation</label>
+            <div class="select-wrapper">
+              <select id="form-water">
+                <option value="" data-lang="form.water.placeholder">Select availability...</option>
+                <option value="high" data-lang="water.high">💧💧💧 High — Canal / tube well</option>
+                <option value="medium" data-lang="water.medium">💧💧 Medium — Rain + partially irrigated</option>
+                <option value="low" data-lang="water.low">💧 Low — Rain-fed only</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="step-actions">
+          <button class="btn btn-outline" id="btn-back-2" data-lang="btn.back">← Back</button>
+          <button class="btn btn-primary" id="btn-next-2" data-lang="btn.next2">Next: Get Report →</button>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="wizard-step" id="step-3">
+        <h3 class="step-title" data-lang="step3.title">🤖 Step 3: AI Analysis Ready</h3>
+        <p class="step-desc text-muted" data-lang="step3.desc">Our AI engine is ready to generate your personalised crop advisory</p>
+        <div class="summary-card glass-card" style="padding:1.5rem;margin-bottom:1.5rem">
+          <h4
+            style="margin-bottom:1rem;font-size:0.9rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em" data-lang="summary.title">
+            Your Farm Profile Summary</h4>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label" data-lang="form.district.label">District</span>
+              <span class="summary-val text-green" id="sum-district">—</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label" data-lang="form.soil.label">Soil Type</span>
+              <span class="summary-val text-green" id="sum-soil">—</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label" data-lang="form.season.label">Season</span>
+              <span class="summary-val text-green" id="sum-season">—</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label" data-lang="form.water.label">Water</span>
+              <span class="summary-val text-green" id="sum-water">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="step-actions">
+          <button class="btn btn-outline" id="btn-back-3">← Back</button>
+          <button class="btn btn-primary btn-lg glow-pulse" id="btn-submit">
+            🤖 Generate AI Report
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar info -->
+    <div class="advisor-sidebar">
+      <div class="glass-card sidebar-card tilt-card">
+        <h4 data-lang="advisor.how.title">💡 How AI Scoring Works</h4>
+        <div class="divider"></div>
+        <div class="ai-factor"><span data-lang="advisor.how.climate">📍 District Climate</span><span class="text-green">30 pts</span></div>
+        <div class="ai-factor"><span data-lang="advisor.how.soil">🌿 Soil Match</span><span class="text-green">25 pts</span></div>
+        <div class="ai-factor"><span data-lang="advisor.how.temp">🌡️ Temperature</span><span class="text-amber">20 pts</span></div>
+        <div class="ai-factor"><span data-lang="advisor.how.rain">🌧️ Rainfall</span><span class="text-amber">15 pts</span></div>
+        <div class="ai-factor"><span data-lang="advisor.how.water">💧 Water Need</span><span class="text-amber">10 pts</span></div>
+      </div>
+      <div class="glass-card sidebar-card" style="background:var(--green-dim);border-color:rgba(0,229,113,0.2)">
+        <h4 class="text-green" data-lang="advisor.voice.title">🎙️ Voice Advisory</h4>
+        <p style="font-size:0.85rem;margin:0.75rem 0" data-lang="advisor.voice.desc">After getting your report, listen to recommendations in Hindi or
+          English.</p>
+        <div id="voice-waveform" class="waveform" style="display:none;margin:0.75rem 0">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" id="btn-voice">🔊 English</button>
+          <button class="btn btn-outline btn-sm" id="btn-voice-hi">🔊 हिंदी</button>
+        </div>
+      </div>
+      <div class="glass-card sidebar-card">
+        <h4 data-lang="advisor.offline.title">📱 Offline Access</h4>
+        <p style="font-size:0.85rem;margin:0.75rem 0" data-lang="advisor.offline.desc">This page works offline. Once loaded, advisory data is cached for
+          24 hours. No internet required in the field.</p>
+        <span class="badge badge-green">✅ PWA Cached</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Results Section ─────────────────────────────────── -->
+  <section id="results-section" style="display:none;padding:0 4% 80px">
+    <!-- ML Model Info Banner -->
+    <div id="ml-model-banner" class="alert-item alert-green"
+      style="display:none;margin-bottom:1.5rem;font-size:0.82rem;flex-wrap:wrap;gap:6px"></div>
+    <div class="results-header">
+      <h2 data-lang="advisor.results.title">🌾 AI Crop Recommendations for <span class="gradient-text" id="advisory-district"></span></h2>
+      <p class="text-muted" data-lang="advisor.results.desc">Ranked by Gaussian NB model confidence. Top 5 crops for your exact conditions.</p>
+    </div>
+    <div id="results-container" class="results-grid"></div>
+  </section>
+
+  <footer style="margin-top:0">
+    <div class="footer-bottom">
+      <span data-lang="footer.copy">© 2026 KrishiMitra</span>
+      <span data-lang="footer.stats">🤖 GNB Model v2.0 · 89.00% accuracy · 7,000 training samples · 35 crop classes</span>
+    </div>
+  </footer>
+
+  
+  <script src="js/main_v25.js"></script>
+  <script src="js/ml-engine.js"></script>
+  <script src="js/crop-advisor.js"></script>
+
+  <style>
+    .advisor-header {
+      padding: calc(var(--nav-h) + 40px) 4% 0;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 2.5rem;
+    }
+
+    .advisor-header h1 {
+      margin: 0.5rem 0 1rem;
+    }
+
+    .dash-breadcrumb {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .advisor-main {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 2rem;
+      padding: 0 4% 3rem;
+    }
+
+    .wizard-container {
+      padding: 2.5rem;
+    }
+
+    .wizard-progress {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 2rem;
+    }
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .si-dot {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.4s;
+      flex-shrink: 0;
+    }
+
+    .step-indicator span {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      transition: color 0.3s;
+      white-space: nowrap;
+    }
+
+    .step-indicator.active .si-dot {
+      background: var(--green-glow);
+      border-color: var(--green-glow);
+      color: #000;
+      box-shadow: var(--glow-green);
+    }
+
+    .step-indicator.active span {
+      color: var(--green-glow);
+    }
+
+    .step-indicator.done .si-dot {
+      background: var(--green-dark);
+      border-color: var(--green-dark);
+      color: #fff;
+    }
+
+    .step-indicator.done span {
+      color: var(--green-mid);
+    }
+
+    .si-connector {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      margin: 0 12px;
+      max-width: 60px;
+    }
+
+    .wizard-step {
+      display: none;
+    }
+
+    .wizard-step.active {
+      display: block;
+      animation: fadeUp 0.4s ease forwards;
+    }
+
+    .step-title {
+      margin-bottom: 0.4rem;
+    }
+
+    .step-desc {
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .step-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+    }
+
+    /* Sidebar */
+    .advisor-sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .sidebar-card {
+      padding: 1.5rem;
+    }
+
+    .ai-factor {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+
+    .ai-factor:last-child {
+      border-bottom: none;
+    }
+
+    /* Summary */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .summary-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .summary-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .summary-val {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    /* Results */
+    .results-header {
+      margin-bottom: 2rem;
+    }
+
+    .results-header h2 {
+      margin-bottom: 0.5rem;
+    }
+
+    .results-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .result-card {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .result-card-inner {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 0;
+    }
+
+    .result-ring-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    .score-ring {
+      display: block;
+    }
+
+    .result-rank {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-top: 6px;
+      text-align: center;
+    }
+
+    .result-info {
+      padding: 1.5rem;
+    }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 0.75rem;
+    }
+
+    .result-icon {
+      font-size: 2rem;
+    }
+
+    .result-name {
+      font-size: 1.2rem;
+      margin-bottom: 4px;
+    }
+
+    .result-desc {
+      font-size: 0.88rem;
+      margin-bottom: 1rem;
+    }
+
+    .result-benefits {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .benefit-tag {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 8px;
+    }
+
+    .result-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .advisor-main {
+        grid-template-columns: 1fr;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .result-card-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .result-ring-wrap {
+        flex-direction: row;
+        gap: 1.5rem;
+        padding: 1.2rem 1.5rem;
+      }
+    }
+  </style>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('[PWA] Service Worker registered'))
+          .catch(err => console.error('[PWA] Service Worker failed', err));
+      });
+    }
+  </script>
+</body>
+
+</html>
