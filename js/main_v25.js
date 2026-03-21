@@ -472,10 +472,54 @@ function initSmoothScroll() {
   });
 }
 
-function initMobileNav() {
-  const toggle = document.getElementById('mobile-toggle');
-  const navLinks = document.querySelector('.nav-links');
-  if (toggle && navLinks) toggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+function initMobileMenu() {
+  // Create drawer and overlay if they don't exist
+  if (!document.querySelector('.mobile-drawer')) {
+    const drawer = document.createElement('div');
+    drawer.className = 'mobile-drawer';
+    drawer.innerHTML = `
+      <div class="drawer-links">
+        <a href="index.html" data-lang="nav.home">Home</a>
+        <a href="dashboard.html" data-lang="nav.dashboard">Dashboard</a>
+        <a href="crop-advisor.html" data-lang="nav.advisor">Crop Advisor</a>
+        <a href="climate-risk.html" data-lang="nav.risk">Climate Risk</a>
+        <a href="chatbot.html" data-lang="nav.chatbot">AI Chatbot</a>
+      </div>
+      <div class="drawer-footer">
+         <button class="lang-toggle" id="drawer-lang-btn" data-lang="lang.label">🌐 हिंदी</button>
+      </div>
+    `;
+    document.body.appendChild(drawer);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'drawer-overlay';
+    document.body.appendChild(overlay);
+
+    // Hamburger logic
+    const menuBtn = document.querySelector('.menu-btn');
+    const toggle = () => {
+      menuBtn?.classList.toggle('active');
+      drawer.classList.toggle('active');
+      overlay.classList.toggle('active');
+      document.body.style.overflow = drawer.classList.contains('active') ? 'hidden' : '';
+    };
+
+    menuBtn?.addEventListener('click', toggle);
+    overlay.addEventListener('click', toggle);
+
+    // Close on link click
+    drawer.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => { if(drawer.classList.contains('active')) toggle(); });
+    });
+
+    // Language button in drawer
+    const dLangBtn = document.getElementById('drawer-lang-btn');
+    dLangBtn?.addEventListener('click', () => {
+      const current = localStorage.getItem('km-lang') || 'en';
+      const next = current === 'en' ? 'hi' : 'en';
+      window.switchLanguage(next);
+    });
+  }
 }
 
 // ── Initialization ─────────────────────────────────────────
@@ -488,7 +532,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initParticleCanvas();
   initLangSelector();
   initSmoothScroll();
-  initMobileNav();
+  initMobileMenu();
 
   const savedLang = localStorage.getItem('km-lang') || 'en';
   applyLanguage(savedLang);
