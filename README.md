@@ -1,11 +1,11 @@
-# 👨‍🌾 KrishiMitra (कृषिमित्र)
+# 👨‍🌾 VrikshVera (वृक्षवेरा)
 ### *Empowering Uttarakhand's Farmers with AI Climate Intelligence*
 
-**KrishiMitra** is a next-generation, offline-capable Progressive Web App (PWA) designed to provide hyper-local agriculture advisories to smallholder farmers in the Himalayan region. By combining satellite telemetry with on-device Machine Learning, it bridges the gap between complex climate data and actionable farm-level decisions.
+**VrikshVera** is a next-generation, offline-capable Progressive Web App (PWA) designed to provide hyper-local agriculture advisories to smallholder farmers in the Himalayan region. By combining satellite telemetry with on-device Machine Learning, it bridges the gap between complex climate data and actionable farm-level decisions.
 
 ---
 
-## 🌟 The Six Pillars of KrishiMitra
+## 🌟 The Six Pillars of VrikshVera
 
 1.  **🤖 AI Crop Advisor**: A Gaussian Naive Bayes ML model (89% accuracy) that recommends the optimal of 35+ crops based on soil, season, and climate.
 2.  **🛰️ Satellite Risk Monitoring**: Real-time NDVI (Vegetation Index) and soil moisture tracking for precise farm health monitoring.

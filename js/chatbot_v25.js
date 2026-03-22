@@ -1,5 +1,5 @@
 /* ============================================================
-   KrishiMitra — AI Chatbot Engine
+   VrikshVera — ML Inference Engine (Browser)
    Powered by Groq Cloud AI (Llama 3)
    Multilingual Farmer Support + Image Analysis
    ============================================================ */
@@ -10,7 +10,7 @@ const GROQ_MODEL   = 'llama-3.3-70b-versatile';
 const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
 
 // ── System Prompt ────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are KrishiMitra AI, an expert agricultural assistant for small farmers in Uttarakhand, India.
+const SYSTEM_PROMPT = `You are VrikshVera AI, an expert agricultural assistant for small farmers in Uttarakhand, India.
 
 Your role:
 - Diagnose crop diseases, pest problems, irrigation issues, and soil health problems.
@@ -24,7 +24,7 @@ Your role:
 // ── Fallback Knowledge Base (Offline mode) ───────────────────
 const FALLBACK_KB = {
   en: {
-    welcome: "Hello! I am KrishiMitra AI 🌿. How can I help you today?",
+    welcome: "Hello! I am VrikshVera AI 🌿. How can I help you today?",
     placeholder: "Ask me anything about your crops...",
     categories: [
       { triggers: ["pest","insect","bug","worm"], problem: "Pest Infestation", solution: "Use Neem Oil spray (5ml/L). For armyworm, apply Bt spray.", precautions: "Monitor crops daily." },

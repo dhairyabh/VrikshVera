@@ -1,4 +1,4 @@
-const CACHE_NAME = 'krishimitra-v15';
+const CACHE_NAME = 'vrikshvera-v1';
 const ASSETS = [
   './',
   './index.html',
