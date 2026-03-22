@@ -210,7 +210,7 @@ class KrishiBot {
     let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                   .replace(/^[•\-]\s(.+)/gm, '<br>• $1')
                   .replace(/\n/g, '<br>');
-    const card = `<div class="bot-response-card ai-response"><div class="bot-response-section"><span class="response-tag tag-gemini">✨ KrishiMitra AI</span><p>${html}</p></div></div>`;
+    const card = `<div class="bot-response-card ai-response"><div class="bot-response-section"><span class="response-tag tag-gemini">✨ VrikshVera AI</span><p>${html}</p></div></div>`;
     this.addMessage('bot', card);
   }
 
