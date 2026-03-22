@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vrikshvera-v1';
+const CACHE_NAME = 'vrikshvera-v2';
 const ASSETS = [
   './',
   './index.html',
