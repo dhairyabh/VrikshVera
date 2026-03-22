@@ -211,10 +211,10 @@ p { color: var(--text-secondary); line-height: 1.75; }
 @media (max-width: 992px) {
   .lang-toggle {
     display: flex !important;
-    margin-left: auto;
     padding: 6px 12px;
     font-size: 0.75rem;
     pointer-events: all;
+    margin-left: 1rem; /* Gap from title name */
   }
 }
 
@@ -233,6 +233,7 @@ p { color: var(--text-secondary); line-height: 1.75; }
   gap: 5px;
   transition: all 0.3s;
   z-index: 1100;
+  margin-left: auto; /* Push menu-btn to far right */
 }
 
 .menu-btn span {
