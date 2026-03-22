@@ -175,7 +175,7 @@ function renderResults(results, mlInput) {
     const badgeClass     = conf >= 60 ? 'badge-green' : conf >= 40 ? 'badge-amber' : 'badge-red';
 
     // Ideal range check
-    const rangeCheck = window.KrishiML.idealRangeCheck(r.crop, mlInput);
+    const rangeCheck = window.VrikshML.idealRangeCheck(r.crop, mlInput);
     const idealCount = Object.values(rangeCheck).filter(c => c.within_1std).length;
     const totalFeats = Object.keys(rangeCheck).length;
 
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     modelStatus.className = 'badge badge-amber';
   }
 
-  const ok = await window.KrishiML.load('ml/crop_model.json');
+  const ok = await window.VrikshML.load('ml/crop_model.json');
   if (ok && modelStatus) {
     const meta = window.KrishiML.metadata;
     modelStatus.innerHTML = `✅ ${window.t('model.ready')} · ${meta.testAccuracy}% ${window.t('label.accuracy')}`;
