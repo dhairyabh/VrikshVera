@@ -5,7 +5,7 @@
  * Trained on 2,420 samples · 22 crop classes · 7 features
  */
 
-class KrishiMLEngine {
+class VrikshMLEngine {
   constructor() {
     this.model   = null;
     this.loaded  = false;
@@ -135,4 +135,4 @@ class KrishiMLEngine {
 }
 
 // Export global singleton
-window.KrishiML = new KrishiMLEngine();
+window.VrikshML = new VrikshMLEngine();

@@ -53,7 +53,7 @@ const IMAGE_ANALYSIS_MAPPINGS = [
   { keywords: ['yellow'], result: { en: { tags: ['Mosaic Virus'], solutions: ['Sticky Traps'], precautions: ['Remove plants'] }, hi: { tags: ['मोज़ेक वायरस'], solutions: ['चिपचिपे जाल लगाएं'], precautions: ['पौधे हटाएं'] }, confidence: 88 } }
 ];
 
-class KrishiBot {
+class VrikshBot {
   constructor() {
     this.currentLang      = localStorage.getItem('km-lang') || 'en';
     this.chatContainer    = document.getElementById('chat-messages');
@@ -293,4 +293,4 @@ class KrishiBot {
   scrollToBottom() { this.chatContainer.scrollTop = this.chatContainer.scrollHeight; }
 }
 
-document.addEventListener('DOMContentLoaded', () => { window.krishiBot = new KrishiBot(); });
+document.addEventListener('DOMContentLoaded', () => { window.vrikshBot = new VrikshBot(); });
