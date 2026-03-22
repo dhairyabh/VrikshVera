@@ -251,7 +251,30 @@ function updateCropCalendar(district) {
 }
 
 // ── Main Refresh ─────────────────────────────────────────────
-function refreshDashboard(district) {
+async function refreshDashboard(district) {
+  const indicator = document.getElementById('refresh-indicator');
+  if (indicator) {
+    indicator.textContent = '🔄 Updating...';
+    indicator.style.color = 'var(--amber)';
+  }
+
+  // Fetch Live Data
+  const liveData = await window.WeatherService.getWeather(district);
+  
+  if (liveData) {
+    // Update local DISTRICTS mirror for this session
+    DISTRICTS[district].temp = liveData.temp;
+    DISTRICTS[district].humidity = liveData.humidity;
+    DISTRICTS[district].rainfall = liveData.rainfall;
+    DISTRICTS[district].wind = liveData.wind;
+    
+    if (indicator) {
+      const timeStr = new Date(liveData.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      indicator.innerHTML = `✅ Live <span style="font-size:0.7rem;opacity:0.7;margin-left:4px">${timeStr}</span>`;
+      indicator.style.color = 'var(--green-glow)';
+    }
+  }
+
   const d = DISTRICTS[district];
   updateWeatherCards(district);
   updateAlerts(district);

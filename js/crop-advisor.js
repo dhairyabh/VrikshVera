@@ -350,6 +350,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const section = document.getElementById('results-section');
       if (section) {
         section.style.display = 'block';
+        const adDist = document.getElementById('advisory-district');
+        if (adDist) adDist.textContent = window.t('dist.' + formData.district) || formData.district;
         setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
       }
       renderResults(results, mlInput);
@@ -391,6 +393,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 4. Update results if visible
     if (lastResults.length > 0) {
+      const adDist = document.getElementById('advisory-district');
+      if (adDist) adDist.textContent = window.t('dist.' + formData.district) || formData.district;
       const mlInput = buildMLInput(formData);
       renderResults(lastResults, mlInput);
     }

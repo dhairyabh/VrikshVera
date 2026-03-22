@@ -36,11 +36,32 @@ function riskColor(score) {
 }
 
 // ── Build district grid ───────────────────────────────────────
-function buildDistrictGrid() {
+async function buildDistrictGrid() {
   const grid = document.getElementById('district-grid');
   if (!grid) return;
-  grid.innerHTML = '';
+  
+  // Update header count badges if they exist
+  const highBadge = document.querySelector('.badge-red');
+  if (highBadge && highBadge.textContent.includes('High Risk')) {
+    highBadge.textContent = '🔴 Live Calculating...';
+  }
 
+  // Iterate and update with live weather if possible
+  for (const [name, data] of Object.entries(DISTRICT_RISK)) {
+    const live = await window.WeatherService.getWeather(name);
+    if (live) {
+      // Dynamic shift: heavy rain increases flood/landslide risk
+      // extreme temp increases frost/heat risk
+      if (live.rainfall > 10) data.landslide = Math.min(100, data.landslide + 15);
+      if (live.rainfall > 5) data.flood = Math.min(100, data.flood + 10);
+      if (live.temp < 5) data.frost = Math.min(100, data.frost + 20);
+      
+      // Recompute overall
+      data.overall = Math.round((data.landslide + data.flood + data.drought + data.frost) / 4);
+    }
+  }
+
+  grid.innerHTML = '';
   Object.entries(DISTRICT_RISK).forEach(([name, data]) => {
     const color = riskColor(data.overall);
     const cell = document.createElement('div');
@@ -52,12 +73,43 @@ function buildDistrictGrid() {
       <div class="district-cell-score" style="color:${color.text}">${data.overall}%</div>
       <div class="district-cell-label" style="color:${color.text}">${color.label}</div>
     `;
-    cell.addEventListener('click', () => selectDistrict(name, data));
+    cell.addEventListener('click', () => {
+      selectedName = name;
+      selectDistrict(name, data);
+      buildRiskRadar(name);
+    });
     grid.appendChild(cell);
-    setTimeout(() => cell.classList.add('visible'), 100);
+    setTimeout(() => cell.classList.add('visible'), 50);
   });
+
+  // Update summary badges
+  updateSummaryBadges();
 }
 
+function updateSummaryBadges() {
+  let h = 0, m = 0, l = 0;
+  Object.values(DISTRICT_RISK).forEach(d => {
+    if (d.overall >= 70) h++;
+    else if (d.overall >= 45) m++;
+    else l++;
+  });
+  
+  const bH = document.querySelector('.badge-red');
+  const bM = document.querySelector('.badge-amber');
+  const bL = document.querySelector('.badge-green');
+  
+  if (bH && bH.innerHTML.includes('High')) bH.textContent = `🔴 High Risk Districts: ${h}`;
+  if (bM && bM.innerHTML.includes('Medium')) bM.textContent = `🟡 Medium Risk: ${m}`;
+  if (bL && bL.innerHTML.includes('Low')) bL.textContent = `🟢 Low Risk: ${l}`;
+  
+  const satBadge = document.querySelectorAll('.badge-green')[1];
+  if (satBadge && satBadge.textContent.includes('satellite')) {
+    satBadge.textContent = `🛰️ Live Sync: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────
+let selectedName = 'Dehradun';
 // ── Select district → show detail ────────────────────────────
 function selectDistrict(name, data) {
   // Highlight selected cell
@@ -271,7 +323,8 @@ function buildLegend() {
 }
 
 // ── Init ─────────────────────────────────────────────────────
-let selectedName = 'Dehradun';
+// Init
+// selectedName is already declared above
 
 document.addEventListener('DOMContentLoaded', () => {
   buildDistrictGrid();
