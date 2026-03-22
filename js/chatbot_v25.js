@@ -5,7 +5,7 @@
    ============================================================ */
 
 // ── Groq Configuration ─────────────────────────────────────
-const GROQ_API_KEY = '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';
+const GROQ_API_KEY = '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';
 const GROQ_MODEL   = 'llama-3.3-70b-versatile';
 const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
 
