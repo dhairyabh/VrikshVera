@@ -345,19 +345,35 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadML(); // Run in background
 
 
-  // Step navigation
-  document.getElementById('btn-next-1')?.addEventListener('click', () => {
-    if (collectStep1()) goToStep(2);
-    else showError('Please select all soil and location fields.');
+  // Step navigation (Using delegation for robustness)
+  document.addEventListener('click', (e) => {
+    const btnNext1 = e.target.closest('#btn-next-1');
+    const btnNext2 = e.target.closest('#btn-next-2');
+    const btnBack2 = e.target.closest('#btn-back-2');
+    const btnBack3 = e.target.closest('#btn-back-3');
+
+    if (btnNext1) {
+      if (collectStep1()) {
+        goToStep(2);
+      } else {
+        const msg = 'Please select your District and Soil type, and ensure all soil health values (N, P, K, pH) are entered.';
+        showError(msg);
+        alert(msg); // Forced alert for visibility
+      }
+    }
+    if (btnNext2) {
+      if (collectStep2()) {
+        updateSummary();
+        goToStep(3);
+      } else {
+        const msg = 'Please select season and water availability.';
+        showError(msg);
+        alert(msg);
+      }
+    }
+    if (btnBack2) goToStep(1);
+    if (btnBack3) goToStep(2);
   });
-  document.getElementById('btn-next-2')?.addEventListener('click', () => {
-    if (collectStep2()) {
-      updateSummary();
-      goToStep(3);
-    } else showError('Please select season and water availability.');
-  });
-  document.getElementById('btn-back-2')?.addEventListener('click', () => goToStep(1));
-  document.getElementById('btn-back-3')?.addEventListener('click', () => goToStep(2));
 
   // Submit — run ML prediction
   document.getElementById('btn-submit')?.addEventListener('click', async () => {
