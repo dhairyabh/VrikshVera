@@ -94,7 +94,8 @@ function collectStep1() {
   const k        = document.getElementById('form-k')?.value;
   const ph       = document.getElementById('form-ph')?.value;
 
-  if (!district || !soil || !n || !p || !k || !ph) return false;
+  // Check for empty strings specifically to allow '0' values
+  if (!district || !soil || n === '' || p === '' || k === '' || ph === '') return false;
 
   formData.district = district;
   formData.soil     = soil;
@@ -324,22 +325,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Load ML model (non-blocking)
-  const modelStatus = document.getElementById('model-status');
-  if (modelStatus) {
-    modelStatus.textContent = window.t('model.loading');
-    modelStatus.className = 'badge badge-amber';
-  }
+  // (Moved model loading lower to ensure UI listeners attach first)
+  const loadML = async () => {
+    const modelStatus = document.getElementById('model-status');
+    if (modelStatus) {
+      modelStatus.textContent = window.t('model.loading');
+      modelStatus.className = 'badge badge-amber';
+    }
 
-  const ok = await window.VrikshML.load();
-  if (ok && modelStatus) {
-    const meta = window.VrikshML.metadata;
-    modelStatus.innerHTML = `✅ ${window.t('model.ready')} · 94.2% ${window.t('label.accuracy')}`;
-    modelStatus.className   = 'badge badge-green';
-  } else if (modelStatus) {
-    modelStatus.textContent = window.t('model.failed');
-    modelStatus.className   = 'badge badge-red';
-  }
+    const ok = await window.VrikshML.load();
+    if (ok && modelStatus) {
+      modelStatus.innerHTML = `✅ ${window.t('model.ready')} · 94.2% ${window.t('label.accuracy')}`;
+      modelStatus.className   = 'badge badge-green';
+    } else if (modelStatus) {
+      modelStatus.textContent = window.t('model.failed');
+      modelStatus.className   = 'badge badge-red';
+    }
+  };
+  loadML(); // Run in background
+
 
   // Step navigation
   document.getElementById('btn-next-1')?.addEventListener('click', () => {
