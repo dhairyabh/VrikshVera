@@ -1,8 +1,18 @@
 services:
-  krishimitra:
+  vrikshvera:
     build: .
     ports:
       - "8001:80"
     volumes:
       - .:/usr/share/nginx/html # Live reload during development
+    restart: always
+    depends_on:
+      - api
+
+  api:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
     restart: always

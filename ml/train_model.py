@@ -1,5 +1,5 @@
 """
-KrishiMitra -- ML Training Pipeline
+VrikshVera -- ML Training Pipeline
 Trains Random Forest & Gaussian Naive Bayes on crop dataset.
 Exports trained model as crop_model.json for use in JS frontend.
 """
@@ -19,7 +19,7 @@ _DIR = os.path.dirname(os.path.abspath(__file__))
 from generate_dataset import generate_dataset
 
 print("=" * 60)
-print("  KrishiMitra -- Crop Recommendation ML Training Pipeline")
+print("  VrikshVera -- Crop Recommendation ML Training Pipeline")
 print("=" * 60)
 
 df = generate_dataset()

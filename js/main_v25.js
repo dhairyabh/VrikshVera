@@ -132,6 +132,13 @@ const LANG = {
     'risk.ins.rwbcis.full': 'Restructured WBCIS', 'risk.ins.rwbcis.desc': 'Specialized insurance cover for horticulture and specific crops.',
     'risk.ins.kcc.full': 'Kisan Credit Card', 'risk.ins.kcc.desc': 'Short-term credit for cultivation expenses and emergency farm needs.',
     'risk.insurance.desc': 'Available protection schemes for climate-risk farmers in Uttarakhand',
+    'risk.status.calculating': '🔴 Live Calculating...',
+    'risk.status.synced': '🛰️ Live Sync',
+    'dash.risk.engine': 'Module 1: Weather Risk Engine',
+    'risk.breakdown': 'Hazard Breakdown',
+    'risk.ins.title': '🛡️ Recommended Insurance',
+    'risk.advisory': '📋 AI Advisory',
+    'risk.footer.sat': '🛰️ Risk data updated from satellite every 2 hours',
     'dash.quick.finance': 'Climate Finance & Insurance'
   },
   hi: {
@@ -184,7 +191,7 @@ const LANG = {
     'risk.title': 'जिला जोखिम खुफिया मानचित्र', 'risk.map': '🗺️ उत्तराखंड जोखिम मानचित्र', 'risk.desc': 'सैटेलाइट डेटा, मौसम फीड और भूगर्भीय सर्वेक्षणों का उपयोग करके उत्तराखंड के सभी 13 जिलों के लिए वास्तविक समय जलवायु जोखिम मूल्यांकन।',
     'risk.badge.high': '🔴 उच्च जोखिम वाले जिले', 'risk.badge.medium': '🟡 मध्यम जोखिम', 'risk.badge.low': '🟢 कम जोखिम', 'risk.badge.sat': '🛰️ अंतिम उपग्रह पास: 2 घंटे पहले',
     'risk.hint': 'विस्तृत जोखिम विवरण देखने के लिए किसी भी जिले पर क्लिक करें',
-    'footer.copy': '© 2026 कृषि-मित्र', 'footer.stats': '🤖 जीएनबी मॉडल v2.0 · 89% सटीकता · 7,000 ट्रेनिंग सैंपल · 35 फसलें',
+    'footer.copy': '© 2026 वृक्ष-वेरा', 'footer.stats': '🤖 जीएनबी मॉडल v2.5 · 89% सटीकता · 7,000 ट्रेनिंग सैंपल · 35 फसलें',
     'footer.brand.desc': 'जलवायु-संवेदनशील क्षेत्रों में छोटे किसानों के लिए एआई-पावर्ड जलवायु इंटेलिजेंस प्लेटफॉर्म।',
     'dash.label.temp': 'तापमान', 'dash.label.humidity': 'नमी', 'dash.label.rainfall': 'वर्षा', 'dash.label.wind': 'हवा की गति',
     'dash.sub.temp': 'वर्तमान औसत', 'dash.sub.humidity': 'सापेक्ष %', 'dash.sub.rainfall': '7-दिवसीय औसत (मिमी)', 'dash.sub.wind': 'किमी/घंटा',
@@ -233,7 +240,7 @@ const LANG = {
     'bot.sidebar.desc': 'आपका 24/7 डिजिटल क्रॉप डॉक्टर। आपकी भाषा में विशेषज्ञ सलाह।',
     'bot.sidebar.select': 'भाषा चुनें', 'bot.sidebar.topics': 'त्वरित विषय', 'bot.sidebar.status': 'एआई इंजन: सक्रिय (v2.4)',
     'bot.header.name': 'कृषि सहायक', 'bot.header.status': 'ऑनलाइन • बहु-जिला समर्थन',
-    'bot.welcome.title': 'कृषि-मित्र चैट में आपका स्वागत है',
+    'bot.welcome.title': 'वृक्ष-वेरा चैट में आपका स्वागत है',
     'bot.welcome.desc': 'उत्तराखंड के किसानों के लिए विशेषज्ञ कृषि सलाह। रोगों का तुरंत पता लगाने के लिए अपनी फसलों की तस्वीरें अपलोड करें।',
     'bot.input.hint': 'एआई परिणाम केवल सलाहकार उद्देश्यों के लिए हैं। महत्वपूर्ण निर्णयों के लिए स्थानीय विशेषज्ञों से परामर्श लें।',
     'bot.topic.pest': 'कीट समस्या', 'bot.topic.yellow': 'पीली पत्तियाँ', 'bot.topic.irrigation': 'सिंचाई सहायता', 'bot.topic.schemes': 'सरकारी योजनाएं', 'bot.topic.calendar': 'फसल कैलेंडर',
@@ -252,6 +259,13 @@ const LANG = {
     'risk.ins.rwbcis.full': 'पुनर्गठित WBCIS', 'risk.ins.rwbcis.desc': 'बागवानी और विशिष्ट फसलों के लिए विशेष बीमा कवर।',
     'risk.ins.kcc.full': 'किसान क्रेडिट कार्ड', 'risk.ins.kcc.desc': 'खेती के खर्च और आपातकालीन जरूरतों के लिए अल्पकालिक क्रेडिट।',
     'risk.insurance.desc': 'उत्तराखंड के किसानों के लिए उपलब्ध सुरक्षा योजनाएं',
+    'risk.status.calculating': '🔴 लाइव गणना...',
+    'risk.status.synced': '🛰️ लाइव सिंक',
+    'dash.risk.engine': 'मॉड्यूल 1: मौसम जोखिम इंजन',
+    'risk.breakdown': 'खतरे का विवरण',
+    'risk.ins.title': '🛡️ अनुशंसित बीमा',
+    'risk.advisory': '📋 एआई सलाहकार',
+    'risk.footer.sat': '🛰️ सैटेलाइट से जोखिम डेटा हर 2 घंटे में अपडेट किया जाता है',
     'dash.quick.finance': 'जलवायु वित्त और बीमा'
   }
 };

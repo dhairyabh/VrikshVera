@@ -43,7 +43,7 @@ async function buildDistrictGrid() {
   // Update header count badges if they exist
   const highBadge = document.querySelector('.badge-red');
   if (highBadge && highBadge.textContent.includes('High Risk')) {
-    highBadge.textContent = '🔴 Live Calculating...';
+    highBadge.textContent = window.t('risk.status.calculating');
   }
 
   // Iterate and update with live weather if possible
@@ -103,8 +103,8 @@ function updateSummaryBadges() {
   if (bL && bL.innerHTML.includes('Low')) bL.textContent = `🟢 Low Risk: ${l}`;
   
   const satBadge = document.querySelectorAll('.badge-green')[1];
-  if (satBadge && satBadge.textContent.includes('satellite')) {
-    satBadge.textContent = `🛰️ Live Sync: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  if (satBadge && (satBadge.textContent.includes('satellite') || satBadge.textContent.includes('उपग्रह'))) {
+    satBadge.textContent = `${window.t('risk.status.synced')}: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   }
 }
 
@@ -136,7 +136,7 @@ function selectDistrict(name, data) {
 
   const badge = document.getElementById('detail-badge');
   if (badge) {
-    badge.textContent = colorData.label + ' ' + window.t('dash.risk.title' || 'RISK');
+    badge.textContent = colorData.label + ' ' + window.t('risk.overall');
     badge.className = `badge ${data.overall >= 70 ? 'badge-red' : data.overall >= 45 ? 'badge-amber' : 'badge-green'}`;
   }
 

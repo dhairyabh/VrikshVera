@@ -1,5 +1,5 @@
 """
-KrishiMitra — Expanded Crop Recommendation Dataset Generator v2
+VrikshVera — Expanded Crop Recommendation Dataset Generator v2
 Generates ~6,800 samples across 34 crop classes (7 features each).
 More carefully differentiated crop parameters based on:
   - ICAR agronomic profiles, FAO crop profiles

@@ -46,7 +46,7 @@ const WeatherService = {
             
             const data = await response.json();
             
-            // Transform to KrishiMitra format
+            // Transform to VrikshVera format
             const result = {
                 temp: Math.round(data.main.temp),
                 humidity: data.main.humidity,

@@ -268,6 +268,19 @@ async function refreshDashboard(district) {
     DISTRICTS[district].rainfall = liveData.rainfall;
     DISTRICTS[district].wind = liveData.wind;
     
+    // Dynamic Risk Shift (Sync with climate-risk.js logic)
+    // Start with a base score mapping from static risk
+    let baseScore = district === 'US Nagar' ? 40 : (d.risk === 'high' ? 75 : d.risk === 'medium' ? 55 : 30);
+    
+    if (liveData.rainfall > 10) baseScore += 15;
+    if (liveData.rainfall > 5) baseScore += 10;
+    if (liveData.temp < 5) baseScore += 20;
+    
+    // Convert score back to risk level
+    if (baseScore >= 70) DISTRICTS[district].risk = 'high';
+    else if (baseScore >= 45) DISTRICTS[district].risk = 'medium';
+    else DISTRICTS[district].risk = 'low';
+    
     if (indicator) {
       const timeStr = new Date(liveData.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       indicator.innerHTML = `✅ Live <span style="font-size:0.7rem;opacity:0.7;margin-left:4px">${timeStr}</span>`;

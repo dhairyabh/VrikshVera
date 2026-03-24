@@ -36,7 +36,7 @@ const FALLBACK_KB = {
     ui: { analysis_title: "🔍 AI Image Analysis", target_label: "Target: Foliage", issue_label: "Issue", solution_label: "Solution", precautions_label: "Precautions", scan_complete: "Detected {tags} with {confidence}% confidence.", consistent_with: "Matches symptoms of {tag}." }
   },
   hi: {
-    welcome: "नमस्ते! मैं कृषि-मित्र AI हूँ 🌿। मैं आपकी कैसे मदद कर सकता हूँ?",
+    welcome: "नमस्ते! मैं वृक्ष-वेरा AI हूँ 🌿। मैं आपकी कैसे मदद कर सकता हूँ?",
     placeholder: "अपनी फसल के बारे में कुछ भी पूछें...",
     categories: [
       { triggers: ["कीट","कीड़ा","इल्ली"], problem: "कीट का प्रकोप", solution: "नीम तेल का छिड़काव करें। Bt स्प्रे लगाएं।", precautions: "नियमित निगरानी करें।" },
@@ -243,13 +243,39 @@ class VrikshBot {
     });
   }
 
-  processImageAnalysis(imgSrc, text) {
+  async processImageAnalysis(imgSrc, text) {
     const kb = FALLBACK_KB[this.currentLang];
     const ui = kb.ui;
-    const analysis = IMAGE_ANALYSIS_MAPPINGS[Math.floor(Math.random() * IMAGE_ANALYSIS_MAPPINGS.length)];
-    const res = analysis.result[this.currentLang];
-    const html = `<div class="bot-response-card"><div class="analysis-card"><h5>${ui.analysis_title}</h5><p>${ui.scan_complete.replace('{tags}', res.tags.join(' & ')).replace('{confidence}', analysis.result.confidence)}</p></div><div class="bot-response-section mt-2"><span class="response-tag tag-problem">${ui.issue_label}</span><p>${ui.consistent_with.replace('{tag}', res.tags[0])}</p></div><div class="bot-response-section"><span class="response-tag tag-solution">${ui.solution_label}</span><ul class="response-list">${res.solutions.map(s => `<li>${s}</li>`).join('')}</ul></div></div>`;
-    this.addMessage('bot', html);
+    
+    // 1. Convert DataURL to Blob for API
+    try {
+      const response = await fetch(imgSrc);
+      const blob     = await response.blob();
+      const file     = new File([blob], "soil_upload.jpg", { type: "image/jpeg" });
+
+      // 2. Call ML Engine
+      const predictions = await window.VrikshML.predictSoil(file);
+      const top = predictions[0]; // {soil: "...", confidence: ...}
+
+      const soilName = this.currentLang === 'hi' ? (top.soil === 'Black Soil' ? 'काली मिट्टी' : top.soil === 'Clay soil' ? 'चिकनी मिट्टी' : top.soil === 'Alluvial soil' ? 'जलोढ़ मिट्टी' : 'लाल मिट्टी') : top.soil;
+
+      const html = `
+        <div class="bot-response-card">
+          <div class="analysis-card" style="background:var(--green-dim);border:1px solid var(--green-glow)">
+            <h5 style="color:var(--green-glow)">🔍 Soil Vision Analysis</h5>
+            <p>Detected <strong>${soilName}</strong> with <strong>${top.confidence}%</strong> confidence.</p>
+          </div>
+          <div class="bot-response-section mt-2">
+            <span class="response-tag tag-gemini">✨ VrikshVera Insight</span>
+            <p>${this.currentLang === 'hi' ? `यह ${soilName} उत्तराखंड के कई क्षेत्रों में पाई जाती है। इसके लिए उपयुक्त फसलें जानने के लिए आप मेरा फसल सलाहकार (Crop Advisor) इस्तेमाल कर सकते हैं।` : `This ${top.soil} is common in various parts of Uttarakhand. You can use my Crop Advisor to see the best crops for this soil type.`}</p>
+          </div>
+        </div>`;
+      
+      this.addMessage('bot', html);
+    } catch (err) {
+      console.error('[Bot] Image analysis failed:', err);
+      this.processFallback(text || "image analysis");
+    }
   }
 
   addMessage(sender, text, imageSrc = null, id = null) {

@@ -47,7 +47,7 @@ The app will be available at: `http://localhost:8001`
 ---
 
 ## 🌍 Multilingual Support
-KrishiMitra supports **Hindi (हिन्दी)** and **English**. The entire UI, including dynamic AI alerts and advice, switches instantly using a reactive `MutationObserver` system without requiring a page refresh.
+VrikshVera supports **Hindi (हिन्दी)** and **English**. The entire UI, including dynamic AI alerts and advice, switches instantly using a reactive `MutationObserver` system without requiring a page refresh.
 
 ## 📄 License
-© 2026 KrishiMitra Project. All rights reserved. 🏔️🇮🇳
+© 2026 VrikshVera Project. All rights reserved. 🏔️🇮🇳
