@@ -65,8 +65,16 @@ class VrikshInference:
         ])
 
     def predict_crop(self, n, p, k, ph):
-        # Features: N, P, K, ph (Matching trained checkpoint shape)
-        input_data = torch.tensor([[n, p, k, ph]], dtype=torch.float32).to(self.device)
+        # ── Scaling (Manual StandardScaler) ───────────────────
+        # Based on training set statistics
+        # Means: [50.55, 53.36, 48.14, 6.47]
+        # Stds:  [36.91, 32.98, 50.64, 0.77]
+        n_s  = (n - 50.55) / 36.91
+        p_s  = (p - 53.36) / 32.98
+        k_s  = (k - 48.14) / 50.64
+        ph_s = (ph - 6.47) / 0.77
+        
+        input_data = torch.tensor([[n_s, p_s, k_s, ph_s]], dtype=torch.float32).to(self.device)
         with torch.no_grad():
             outputs = self.crop_model(input_data)
             probs = torch.softmax(outputs, dim=1).cpu().numpy()[0]

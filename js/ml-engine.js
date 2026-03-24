@@ -92,9 +92,37 @@ class VrikshMLEngine {
     }
   }
 
-  // ── Mock ideal range check (Can be expanded in backend) ──────
+  // ── Real-time Ideal Range Check ────────────────────────────
   idealRangeCheck(crop, input) {
-    return {}; // Placeholder for now
+    // Top crop stats (Mean, Std) from training data
+    const stats = {
+      rice:   { N: [80, 22], P: [49, 12], K: [40, 8], ph: [6.4, 0.4] },
+      wheat:  { N: [101, 24], P: [44, 10], K: [40, 7], ph: [6.6, 0.5] },
+      maize:  { N: [90, 30], P: [50, 15], K: [20, 6], ph: [6.3, 0.6] },
+      grapes: { N: [23, 7], P: [134, 18], K: [204, 26], ph: [6.1, 0.5] },
+      apple:  { N: [20, 7], P: [133, 18], K: [199, 26], ph: [5.8, 0.5] },
+      banana: { N: [97, 30], P: [82, 20], K: [49, 12], ph: [5.9, 0.5] }
+    };
+
+    const cropStats = stats[crop.toLowerCase()];
+    if (!cropStats) return {};
+
+    const results = {};
+    const features = ['N', 'P', 'K', 'ph'];
+    
+    features.forEach(f => {
+      const val = input[f.toLowerCase()] || input[f];
+      const [mean, std] = cropStats[f];
+      results[f] = {
+        value: val,
+        ideal_mean: mean,
+        ideal_std: std,
+        within_1std: Math.abs(val - mean) <= std,
+        score: Math.max(0, 1 - Math.abs(val - mean) / (2 * std))
+      };
+    });
+
+    return results;
   }
 
   get metadata() {

@@ -262,13 +262,8 @@ function renderResults(results, mlInput) {
   // Show model info banner
   const banner = document.getElementById('ml-model-banner');
   if (banner) {
-    const meta = window.KrishiML.metadata;
-    banner.innerHTML = `
-      🤖 <strong>Real ML Model</strong> · ${meta.type} ·
-      Test Accuracy: <strong class="text-green">${meta.testAccuracy}%</strong> ·
-      CV Accuracy: <strong class="text-green">${window.KrishiML.model?.test_accuracy}%</strong> ·
-      Trained on <strong>${meta.trainedOn}</strong> · ${meta.classes} crop classes · ${meta.features} features
-    `;
+    const meta = window.VrikshML.metadata;
+    banner.innerHTML = `🤖 <strong>Unified ML Engine:</strong> ${meta.recommender} · Models: MLP + CNN + GB · End-to-End AI Advisory`;
     banner.style.display = 'flex';
   }
 }
