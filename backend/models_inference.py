@@ -36,7 +36,7 @@ class VrikshInference:
         
         # Load Crop Model
         self.crop_model = CropTabularMLP(4, len(self.crop_labels))
-        self.crop_model.load_state_dict(torch.load(os.path.join(model_dir, 'crop_recommendation_model.pth'), map_location=self.device))
+        self.crop_model.load_state_dict(torch.load(os.path.join(model_dir, 'crop_recommendation_model.pth'), map_location=self.device, weights_only=False))
         self.crop_model.to(self.device).eval()
         
         # Load Soil Vision Model
@@ -48,7 +48,7 @@ class VrikshInference:
             nn.Dropout(0.2),
             nn.Linear(128, len(self.soil_labels))
         )
-        self.soil_model.load_state_dict(torch.load(os.path.join(model_dir, 'soil_vision_model.pth'), map_location=self.device))
+        self.soil_model.load_state_dict(torch.load(os.path.join(model_dir, 'soil_vision_model.pth'), map_location=self.device, weights_only=False))
         self.soil_model.to(self.device).eval()
         
         # Load Fertilizer Model

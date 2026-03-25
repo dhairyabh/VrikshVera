@@ -6,23 +6,40 @@
 
 class VrikshMLEngine {
   constructor() {
-    this.apiBase = 'http://localhost:5000';
-    this.loaded  = true; // Backend is always "loaded" if reachable
-    this.loading = false;
+    this.apiBase  = 'http://localhost:5000';
+    this.loaded   = false; // Set true once backend is confirmed reachable
+    this.loading  = false;
+    this._retries = 0;
+    this._maxRetries = 5;
   }
 
   // ── Backend Connectivity Check ───────────────────────────────
   async load() {
     try {
-      const res = await fetch(`${this.apiBase}/health`);
+      const res = await fetch(`${this.apiBase}/health`, { signal: AbortSignal.timeout(4000) });
       if (!res.ok) throw new Error('Backend unreachable');
       const data = await res.json();
-      console.log(`[VrikshML] Connected to Backend: ${data.engine}`);
+      console.log('[VrikshML] Connected to Backend. Status:', data.status);
+      this.loaded = true;
       return true;
     } catch (err) {
-      console.warn('[VrikshML] Backend check failed, using fallback or awaiting startup:', err);
+      this.loaded = false;
+      console.warn('[VrikshML] Backend check failed:', err.message);
       return false;
     }
+  }
+
+  // ── Retry with exponential backoff (2s, 4s, 8s, 16s …) ──────
+  async retryConnect(onSuccess, onFail) {
+    const delays = [2000, 4000, 8000, 16000, 30000];
+    for (let i = 0; i < delays.length; i++) {
+      await new Promise(r => setTimeout(r, delays[i]));
+      console.log(`[VrikshML] Retry attempt ${i + 1}/${delays.length}…`);
+      const ok = await this.load();
+      if (ok) { if (onSuccess) onSuccess(); return true; }
+    }
+    if (onFail) onFail();
+    return false;
   }
 
   // ── Core predict: Sends N, P, K, Temp, Hum, pH, Rain to Backend ─

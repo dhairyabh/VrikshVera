@@ -315,27 +315,64 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (distSel) {
     Object.keys(DISTRICT_CLIMATE).forEach(d => {
       const opt = document.createElement('option');
-      opt.value = d; opt.textContent = window.t('dist.' + d);
+      opt.value = d; opt.textContent = window.t('dist.' + d) || d;
       distSel.appendChild(opt);
     });
+
+    // Auto-fill N, P, K, pH when district changes
+    distSel.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      if (selected && DISTRICT_CLIMATE[selected]) {
+        const data = DISTRICT_CLIMATE[selected];
+        document.getElementById('form-n').value  = data.N;
+        document.getElementById('form-p').value  = data.P;
+        document.getElementById('form-k').value  = data.K;
+        
+        // Let soil selection drive pH more than district, 
+        // but if soil isn't picked yet, use district pH
+        const soilSel = document.getElementById('form-soil')?.value;
+        if (!soilSel) {
+          document.getElementById('form-ph').value = data.ph;
+        }
+      }
+    });
   }
+
+  // Auto-update pH based on Soil type
+  const soilSel = document.getElementById('form-soil');
+  if (soilSel) {
+    soilSel.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      if (selected && SOIL_PH[selected]) {
+        document.getElementById('form-ph').value = SOIL_PH[selected];
+      }
+    });
+  }
+
 
   // (Moved model loading lower to ensure UI listeners attach first)
   const loadML = async () => {
     const modelStatus = document.getElementById('model-status');
-    if (modelStatus) {
-      modelStatus.textContent = window.t('model.loading');
-      modelStatus.className = 'badge badge-amber';
-    }
+    const setStatus = (html, cls) => {
+      if (!modelStatus) return;
+      modelStatus.innerHTML = html;
+      modelStatus.className = `badge ${cls}`;
+    };
+
+    setStatus('⏳ ' + window.t('model.loading'), 'badge-amber');
 
     const ok = await window.VrikshML.load();
-    if (ok && modelStatus) {
-      modelStatus.innerHTML = `✅ ${window.t('model.ready')} · 94.2% ${window.t('label.accuracy')}`;
-      modelStatus.className   = 'badge badge-green';
-    } else if (modelStatus) {
-      modelStatus.textContent = window.t('model.failed');
-      modelStatus.className   = 'badge badge-red';
+    if (ok) {
+      setStatus(`✅ ${window.t('model.ready')} · 94.2% ${window.t('label.accuracy')}`, 'badge-green');
+      return;
     }
+
+    // Backend offline — start background retry
+    setStatus('🔄 Connecting to AI backend…', 'badge-amber');
+    window.VrikshML.retryConnect(
+      () => setStatus(`✅ ${window.t('model.ready')} · 94.2% ${window.t('label.accuracy')}`, 'badge-green'),
+      () => setStatus('❌ ' + window.t('model.failed') + ' — Start backend first', 'badge-red')
+    );
   };
   loadML(); // Run in background
 

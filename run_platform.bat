@@ -8,8 +8,8 @@ echo.
 echo [STEP 1] Starting ML Backend (Flask)...
 start "VrikshVera AI Backend" cmd /c "start_vrikshvera_ml.bat"
 
-:: 2. Wait for backend to initialize (approx 5 sec)
-timeout /t 5 >nul
+:: 2. Wait for backend to initialize (models take ~10 sec to load)
+timeout /t 12 >nul
 
 :: 3. Start a local server for the Frontend to avoid CORS issues
 echo [STEP 2] Starting local web server...
