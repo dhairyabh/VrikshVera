@@ -6,14 +6,15 @@ import uuid
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()
+# load_dotenv() - Replaced with robust path loading below
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 app = Flask(__name__)
 CORS(app)
 
 # Initialize Inference Engine
 # Expects models in 'models' directory relative to app.py
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, 'models')
 inference = VrikshInference(model_dir=MODEL_DIR)
 
