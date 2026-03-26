@@ -258,15 +258,17 @@ async function refreshDashboard(district) {
     indicator.style.color = 'var(--amber)';
   }
 
+  const d = DISTRICTS[district];
+
   // Fetch Live Data
   const liveData = await window.WeatherService.getWeather(district);
   
   if (liveData) {
     // Update local DISTRICTS mirror for this session
-    DISTRICTS[district].temp = liveData.temp;
-    DISTRICTS[district].humidity = liveData.humidity;
-    DISTRICTS[district].rainfall = liveData.rainfall;
-    DISTRICTS[district].wind = liveData.wind;
+    d.temp = liveData.temp;
+    d.humidity = liveData.humidity;
+    d.rainfall = liveData.rainfall;
+    d.wind = liveData.wind;
     
     // Dynamic Risk Shift (Sync with climate-risk.js logic)
     // Start with a base score mapping from static risk
@@ -277,9 +279,9 @@ async function refreshDashboard(district) {
     if (liveData.temp < 5) baseScore += 20;
     
     // Convert score back to risk level
-    if (baseScore >= 70) DISTRICTS[district].risk = 'high';
-    else if (baseScore >= 45) DISTRICTS[district].risk = 'medium';
-    else DISTRICTS[district].risk = 'low';
+    if (baseScore >= 70) d.risk = 'high';
+    else if (baseScore >= 45) d.risk = 'medium';
+    else d.risk = 'low';
     
     if (indicator) {
       const timeStr = new Date(liveData.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -288,7 +290,6 @@ async function refreshDashboard(district) {
     }
   }
 
-  const d = DISTRICTS[district];
   updateWeatherCards(district);
   updateAlerts(district);
   updateRiskBadge(d.risk);
