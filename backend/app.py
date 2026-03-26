@@ -3,6 +3,10 @@ from flask_cors import CORS
 from models_inference import VrikshInference
 import os
 import uuid
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -89,6 +93,38 @@ def predict_fertilizer():
         return jsonify({"status": "success", "recommendation": result})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+
+@app.route('/api/weather', methods=['GET'])
+def get_weather():
+    lat = request.args.get('lat')
+    lon = request.args.get('lon')
+    api_key = os.environ.get('OPENWEATHERMAP_API_KEY')
+    if not api_key:
+        return jsonify({"status": "error", "message": "API key missing from environment"}), 500
+    
+    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
+    try:
+        response = requests.get(url)
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/api/chat', methods=['POST'])
+def chat():
+    api_key = os.environ.get('GROQ_API_KEY')
+    if not api_key:
+        return jsonify({"status": "error", "message": "API key missing from environment"}), 500
+        
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {api_key}'
+    }
+    try:
+        response = requests.post(url, headers=headers, json=request.json)
+        return jsonify(response.json()), response.status_code
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     # Running on 5000 by default

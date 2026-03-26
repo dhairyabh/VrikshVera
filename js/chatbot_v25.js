@@ -4,10 +4,9 @@
    Multilingual Farmer Support + Image Analysis
    ============================================================ */
 
-// ── Groq Configuration ─────────────────────────────────────
-const GROQ_API_KEY = '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';
+// ── Chat API Configuration ─────────────────────────────────
+const CHAT_URL     = 'http://localhost:5000/api/chat';
 const GROQ_MODEL   = 'llama-3.3-70b-versatile';
-const GROQ_URL     = 'https://api.groq.com/openai/v1/chat/completions';
 
 // ── System Prompt ────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are VrikshVera AI, an expert agricultural assistant for small farmers in Uttarakhand, India.
@@ -187,9 +186,9 @@ class VrikshBot {
     const messages = [{ role: 'system', content: systemMsg }, ...this.history];
 
     try {
-      const response = await fetch(GROQ_URL, {
+      const response = await fetch(CHAT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_API_KEY}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: GROQ_MODEL, messages, temperature: 0.7, max_tokens: 1024 })
       });
       if (!response.ok) throw new Error('API error');

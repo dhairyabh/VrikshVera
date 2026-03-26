@@ -4,8 +4,7 @@
    ============================================================ */
 
 const WeatherService = {
-    API_KEY: 'e5d659a45c6e478e0210884e548c89d1',
-    BASE_URL: 'https://api.openweathermap.org/data/2.5/weather',
+    BASE_URL: 'http://localhost:5000/api/weather',
     CACHE_EXPIRY: 30 * 60 * 1000, // 30 minutes in ms
 
     // Geographic Coordinates for Uttarakhand Districts
@@ -41,7 +40,7 @@ const WeatherService = {
 
         // 2. Fetch Live Data
         try {
-            const response = await fetch(`${this.BASE_URL}?lat=${coords.lat}&lon=${coords.lon}&appid=${this.API_KEY}&units=metric`);
+            const response = await fetch(`${this.BASE_URL}?lat=${coords.lat}&lon=${coords.lon}`);
             if (!response.ok) throw new Error(`Weather API failed: ${response.statusText}`);
             
             const data = await response.json();
