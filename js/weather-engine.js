@@ -7,7 +7,8 @@
 const WeatherEngine = {
     // Thresholds
     THRESHOLDS: {
-        HEAVY_RAIN: 15,    // mm
+        HEAVY_RAIN: 10,    // mm
+        MODERATE_RAIN: 2,  // mm
         HEAT_STRESS: 35,   // °C
         COLD_STRESS: 5,    // °C
         HUMIDITY_RISK: 85  // %
@@ -21,7 +22,7 @@ const WeatherEngine = {
     analyze(data) {
         const alerts = [];
 
-        // 1. Heavy Rain Detection
+        // 1. Rain Detection
         if (data.rainfall > this.THRESHOLDS.HEAVY_RAIN) {
             alerts.push({
                 type: 'rain',
@@ -29,6 +30,14 @@ const WeatherEngine = {
                 icon: '🌧️',
                 title: window.t('weather.rain.title'),
                 msg: window.t('weather.rain.msg')
+            });
+        } else if (data.rainfall > this.THRESHOLDS.MODERATE_RAIN) {
+            alerts.push({
+                type: 'rain',
+                level: 'amber',
+                icon: '🌦️',
+                title: window.t('alert.med.t1'),
+                msg: window.t('alert.med.m1')
             });
         }
 

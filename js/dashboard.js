@@ -141,10 +141,10 @@ function initChart(district) {
 // ── Update Weather Cards ──────────────────────────────────────
 function updateWeatherCards(district) {
   const d = DISTRICTS[district];
-  animateValue('val-temp',     0, d.temp,     1200, window.t('unit.temp'));
-  animateValue('val-humidity', 0, d.humidity, 1200, window.t('unit.hum'));
-  animateValue('val-rainfall', 0, d.rainfall, 1200, window.t('unit.rain'));
-  animateValue('val-wind',     0, d.wind,     1200, window.t('unit.wind'));
+  animateValue('val-temp',     0, d.temp,     1200, window.t('unit.temp'), 0);
+  animateValue('val-humidity', 0, d.humidity, 1200, window.t('unit.hum'),  0);
+  animateValue('val-rainfall', 0, d.rainfall, 1200, window.t('unit.rain'), 1);
+  animateValue('val-wind',     0, d.wind,     1200, window.t('unit.wind'), 0);
 
   const ndviEl = document.getElementById('val-ndvi');
   if (ndviEl) {
@@ -159,14 +159,15 @@ function updateWeatherCards(district) {
   if (soilEl) soilEl.textContent = window.t('soil.' + d.soil);
 }
 
-function animateValue(id, from, to, dur, suffix) {
+function animateValue(id, from, to, dur, suffix, precision = 0) {
   const el = document.getElementById(id);
   if (!el) return;
   const start = performance.now();
   const step = now => {
     const p = Math.min((now - start) / dur, 1);
     const ease = 1 - Math.pow(1 - p, 3);
-    el.textContent = Math.round(from + ease * (to - from)) + suffix;
+    const val = from + ease * (to - from);
+    el.textContent = val.toFixed(precision) + suffix;
     if (p < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
@@ -271,16 +272,23 @@ async function refreshDashboard(district) {
     d.wind = liveData.wind;
     
     // Dynamic Risk Shift (Sync with climate-risk.js logic)
-    // Start with a base score mapping from static risk
-    let baseScore = district === 'US Nagar' ? 40 : (d.risk === 'high' ? 75 : d.risk === 'medium' ? 55 : 30);
+    // Map existing risk into a base score
+    let baseScore = (d.risk === 'high' ? 70 : d.risk === 'medium' ? 45 : 20);
     
-    if (liveData.rainfall > 10) baseScore += 15;
-    if (liveData.rainfall > 5) baseScore += 10;
-    if (liveData.temp < 5) baseScore += 20;
+    // Add real-time modifiers
+    if (liveData.rainfall > 10) baseScore += 25;
+    else if (liveData.rainfall > 2) baseScore += 10;
     
+    if (liveData.temp > 35) baseScore += 15; // Heat stress
+    if (liveData.temp < 5) baseScore += 20;  // Cold/Frost risk
+    if (liveData.humidity > 85) baseScore += 15; // Disease risk
+    
+    // Cap score
+    baseScore = Math.min(100, Math.max(0, baseScore));
+
     // Convert score back to risk level
-    if (baseScore >= 70) d.risk = 'high';
-    else if (baseScore >= 45) d.risk = 'medium';
+    if (baseScore >= 65) d.risk = 'high';
+    else if (baseScore >= 35) d.risk = 'medium';
     else d.risk = 'low';
     
     if (indicator) {

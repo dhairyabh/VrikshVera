@@ -5,7 +5,7 @@
 
 const WeatherService = {
     BASE_URL: 'http://localhost:5000/api/weather',
-    CACHE_EXPIRY: 30 * 60 * 1000, // 30 minutes in ms
+    CACHE_EXPIRY: 5 * 60 * 1000, // 5 minutes in ms
 
     // Geographic Coordinates for Uttarakhand Districts
     COORDS: {
