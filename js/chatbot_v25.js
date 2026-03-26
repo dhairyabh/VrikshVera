@@ -5,8 +5,8 @@
    ============================================================ */
 
 // ── Chat API Configuration ─────────────────────────────────
-const CHAT_URL     = 'http://localhost:5000/api/chat';
-const GROQ_MODEL   = 'llama-3.3-70b-versatile';
+const CHAT_URL = 'http://localhost:5000/api/chat';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 // ── System Prompt ────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are VrikshVera AI, an expert agricultural assistant for small farmers in Uttarakhand, India.
@@ -26,10 +26,10 @@ const FALLBACK_KB = {
     welcome: "Hello! I am VrikshVera AI 🌿. How can I help you today?",
     placeholder: "Ask me anything about your crops...",
     categories: [
-      { triggers: ["pest","insect","bug","worm"], problem: "Pest Infestation", solution: "Use Neem Oil spray (5ml/L). For armyworm, apply Bt spray.", precautions: "Monitor crops daily." },
-      { triggers: ["water","irrigat","dry","wilt"], problem: "Irrigation Stress", solution: "Increase irrigation to every 2-3 days. Check soil moisture 5cm deep.", precautions: "Avoid waterlogging." },
-      { triggers: ["yellow","pale"], problem: "Nutrient Deficiency", solution: "Apply Urea or Ferrous Sulphate.", precautions: "Test soil health." },
-      { triggers: ["fungus","blight","rot","rust"], problem: "Fungal Infection", solution: "Apply Copper Oxychloride 3g/L. Remove infected leaves.", precautions: "Avoid overhead watering." }
+      { triggers: ["pest", "insect", "bug", "worm"], problem: "Pest Infestation", solution: "Use Neem Oil spray (5ml/L). For armyworm, apply Bt spray.", precautions: "Monitor crops daily." },
+      { triggers: ["water", "irrigat", "dry", "wilt"], problem: "Irrigation Stress", solution: "Increase irrigation to every 2-3 days. Check soil moisture 5cm deep.", precautions: "Avoid waterlogging." },
+      { triggers: ["yellow", "pale"], problem: "Nutrient Deficiency", solution: "Apply Urea or Ferrous Sulphate.", precautions: "Test soil health." },
+      { triggers: ["fungus", "blight", "rot", "rust"], problem: "Fungal Infection", solution: "Apply Copper Oxychloride 3g/L. Remove infected leaves.", precautions: "Avoid overhead watering." }
     ],
     defaults: { problem: "Query", solution: "Please provide more details or upload a photo for AI diagnosis.", precautions: "Check Crop Advisor for personalized advice." },
     ui: { analysis_title: "🔍 AI Image Analysis", target_label: "Target: Foliage", issue_label: "Issue", solution_label: "Solution", precautions_label: "Precautions", scan_complete: "Detected {tags} with {confidence}% confidence.", consistent_with: "Matches symptoms of {tag}." }
@@ -38,9 +38,9 @@ const FALLBACK_KB = {
     welcome: "नमस्ते! मैं वृक्ष-वेरा AI हूँ 🌿। मैं आपकी कैसे मदद कर सकता हूँ?",
     placeholder: "अपनी फसल के बारे में कुछ भी पूछें...",
     categories: [
-      { triggers: ["कीट","कीड़ा","इल्ली"], problem: "कीट का प्रकोप", solution: "नीम तेल का छिड़काव करें। Bt स्प्रे लगाएं।", precautions: "नियमित निगरानी करें।" },
-      { triggers: ["पानी","सिंचाई","सूखा"], problem: "सिंचाई समस्या", solution: "हर 2-3 दिन में पानी दें। ड्रिप सिंचाई अपनाएं।", precautions: "जलभराव से बचें।" },
-      { triggers: ["पीला","रंग"], problem: "पोषक तत्वों की कमी", solution: "यूरिया या फेरस सल्फेट डालें।", precautions: "मृदा स्वास्थ्य कार्ड से जांच करें।" }
+      { triggers: ["कीट", "कीड़ा", "इल्ली"], problem: "कीट का प्रकोप", solution: "नीम तेल का छिड़काव करें। Bt स्प्रे लगाएं।", precautions: "नियमित निगरानी करें।" },
+      { triggers: ["पानी", "सिंचाई", "सूखा"], problem: "सिंचाई समस्या", solution: "हर 2-3 दिन में पानी दें। ड्रिप सिंचाई अपनाएं।", precautions: "जलभराव से बचें।" },
+      { triggers: ["पीला", "रंग"], problem: "पोषक तत्वों की कमी", solution: "यूरिया या फेरस सल्फेट डालें।", precautions: "मृदा स्वास्थ्य कार्ड से जांच करें।" }
     ],
     defaults: { problem: "प्रश्न", solution: "कृपया अपनी फसल की समस्या अधिक विस्तार से बताएं।", precautions: "फसल सलाहकार पर सलाह प्राप्त करें।" },
     ui: { analysis_title: "🔍 AI छवि विश्लेषण", target_label: "लक्षय: फसल की पत्तियां", issue_label: "समस्या", solution_label: "समाधान", precautions_label: "सावधानियां", scan_complete: "{tags} का पता लगाया।", consistent_with: "छवि {tag} के लक्षण दिखाती है।" }
@@ -54,15 +54,15 @@ const IMAGE_ANALYSIS_MAPPINGS = [
 
 class VrikshBot {
   constructor() {
-    this.currentLang      = localStorage.getItem('km-lang') || 'en';
-    this.chatContainer    = document.getElementById('chat-messages');
-    this.userInput        = document.getElementById('user-input');
-    this.sendBtn          = document.getElementById('send-btn');
-    this.fileInput        = document.getElementById('image-upload');
-    this.previewStrip     = document.getElementById('image-preview-strip');
-    this.isRecording      = false;
-    this.recognition      = null;
-    this.history          = [];
+    this.currentLang = localStorage.getItem('km-lang') || 'en';
+    this.chatContainer = document.getElementById('chat-messages');
+    this.userInput = document.getElementById('user-input');
+    this.sendBtn = document.getElementById('send-btn');
+    this.fileInput = document.getElementById('image-upload');
+    this.previewStrip = document.getElementById('image-preview-strip');
+    this.isRecording = false;
+    this.recognition = null;
+    this.history = [];
 
     this.initSpeech();
     this.initEvents();
@@ -109,7 +109,7 @@ class VrikshBot {
     document.getElementById('voice-btn')?.addEventListener('click', () => this.isRecording ? this.stopRecording() : this.startRecording());
     document.querySelectorAll('.lang-chip').forEach(chip => chip.addEventListener('click', () => this.switchLanguage(chip.dataset.lang)));
     document.querySelectorAll('.topic-btn').forEach(btn => btn.addEventListener('click', () => { this.userInput.value = btn.querySelector('span').textContent; this.handleSend(); }));
-    
+
     // Listen for global language changes (from Navbar)
     window.addEventListener('langChanged', (e) => this.switchLanguage(e.detail.lang));
   }
@@ -119,7 +119,7 @@ class VrikshBot {
     localStorage.setItem('km-lang', lang);
     this.userInput.placeholder = FALLBACK_KB[lang].placeholder;
     this.history = [];
-    
+
     const welcomeBubble = document.getElementById('bot-welcome-msg');
     if (welcomeBubble) {
       welcomeBubble.innerHTML = FALLBACK_KB[lang].welcome;
@@ -129,28 +129,28 @@ class VrikshBot {
       t.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       welcomeBubble.appendChild(t);
     }
-    
+
     if (typeof window.applyLanguage === 'function') window.applyLanguage(lang);
     document.querySelectorAll('.lang-chip').forEach(c => c.classList.toggle('active', c.dataset.lang === lang));
   }
 
   startRecording() {
     if (!this.recognition) {
-        alert("Speech Recognition is not supported in your browser.");
-        return;
+      alert("Speech Recognition is not supported in your browser.");
+      return;
     }
     try {
-        this.recognition.lang = this.currentLang === 'hi' ? 'hi-IN' : 'en-US';
-        this.recognition.start();
+      this.recognition.lang = this.currentLang === 'hi' ? 'hi-IN' : 'en-US';
+      this.recognition.start();
     } catch (e) {
-        console.error('[KrishiBot] Error starting recognition:', e);
-        this.stopRecording();
+      console.error('[KrishiBot] Error starting recognition:', e);
+      this.stopRecording();
     }
   }
 
   stopRecording() {
     this.isRecording = false;
-    try { this.recognition?.stop(); } catch(e) {}
+    try { this.recognition?.stop(); } catch (e) { }
     document.getElementById('voice-btn')?.classList.remove('recording');
   }
 
@@ -158,15 +158,15 @@ class VrikshBot {
     const text = this.userInput.value.trim();
     const images = Array.from(this.previewStrip.querySelectorAll('img')).map(i => i.src);
     if (!text && images.length === 0) return;
-    
+
     this.userInput.value = '';
     this.fileInput.value = '';
     this.previewStrip.innerHTML = '';
     this.previewStrip.classList.remove('active');
-    
+
     if (images.length > 0) images.forEach(src => this.addMessage('user', null, src));
     if (text) this.addMessage('user', text);
-    
+
     this.showTyping(true);
     if (images.length > 0) {
       setTimeout(() => { this.showTyping(false); this.processImageAnalysis(images[0], text); }, 1500);
@@ -177,12 +177,12 @@ class VrikshBot {
 
   async callGroqAI(userText) {
     const langName = this.currentLang === 'hi' ? 'Hindi' : 'English';
-    
+
     // Add tagged user message to history
     this.history.push({ role: 'user', content: `[User Language: ${langName}] ${userText}` });
-    
+
     const systemMsg = `${SYSTEM_PROMPT}\n\nCRITICAL: The user interface is set to ${langName}. You MUST respond in ${langName} ONLY. Do not use any other language even if the user speaks to you in a different one.`;
-    
+
     const messages = [{ role: 'system', content: systemMsg }, ...this.history];
 
     try {
@@ -207,8 +207,8 @@ class VrikshBot {
 
   renderAIReply(text) {
     let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/^[•\-]\s(.+)/gm, '<br>• $1')
-                  .replace(/\n/g, '<br>');
+      .replace(/^[•\-]\s(.+)/gm, '<br>• $1')
+      .replace(/\n/g, '<br>');
     const card = `<div class="bot-response-card ai-response"><div class="bot-response-section"><span class="response-tag tag-gemini">✨ VrikshVera AI</span><p>${html}</p></div></div>`;
     this.addMessage('bot', card);
   }
@@ -245,12 +245,12 @@ class VrikshBot {
   async processImageAnalysis(imgSrc, text) {
     const kb = FALLBACK_KB[this.currentLang];
     const ui = kb.ui;
-    
+
     // 1. Convert DataURL to Blob for API
     try {
       const response = await fetch(imgSrc);
-      const blob     = await response.blob();
-      const file     = new File([blob], "soil_upload.jpg", { type: "image/jpeg" });
+      const blob = await response.blob();
+      const file = new File([blob], "soil_upload.jpg", { type: "image/jpeg" });
 
       // 2. Call ML Engine
       const predictions = await window.VrikshML.predictSoil(file);
@@ -269,7 +269,7 @@ class VrikshBot {
             <p>${this.currentLang === 'hi' ? `यह ${soilName} उत्तराखंड के कई क्षेत्रों में पाई जाती है। इसके लिए उपयुक्त फसलें जानने के लिए आप मेरा फसल सलाहकार (Crop Advisor) इस्तेमाल कर सकते हैं।` : `This ${top.soil} is common in various parts of Uttarakhand. You can use my Crop Advisor to see the best crops for this soil type.`}</p>
           </div>
         </div>`;
-      
+
       this.addMessage('bot', html);
     } catch (err) {
       console.error('[Bot] Image analysis failed:', err);
@@ -280,23 +280,23 @@ class VrikshBot {
   addMessage(sender, text, imageSrc = null, id = null) {
     const row = document.createElement('div');
     row.className = `message-row ${sender}-row animate-fade-in`;
-    
+
     const avatar = document.createElement('div');
     avatar.className = `message-avatar ${sender}-avatar`;
     avatar.innerHTML = sender === 'bot' ? '🌿' : '👤';
-    
+
     const bubble = document.createElement('div');
     bubble.className = `message-bubble ${sender}-bubble ${imageSrc ? 'image-bubble' : ''}`;
     if (id) bubble.id = id;
-    
+
     bubble.innerHTML = imageSrc ? `<img src="${imageSrc}" alt="User Upload">` : text;
-    
+
     // Add Timestamp
     const timeSpan = document.createElement('span');
     timeSpan.className = 'message-time';
     timeSpan.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     bubble.appendChild(timeSpan);
-    
+
     row.appendChild(avatar);
     row.appendChild(bubble);
     this.chatContainer.appendChild(row);

@@ -38,10 +38,14 @@ const RISK_ALERTS = {
 };
 
 // ── Generate 7-day trend data ────────────────────────────────
-function generateTrend(base, variance) {
+function generateTrend(base, variance, isHighRisk = false) {
   return Array.from({ length: 7 }, (_, i) => {
-    const noise = (Math.random() - 0.5) * variance;
-    return Math.round((base + noise + i * 0.5) * 10) / 10;
+    let noise = (Math.random() - 0.5) * variance;
+    // Add a potential "Extreme" spike for high-risk districts (representing the forecast alert)
+    if (isHighRisk && i === 3 && Math.random() > 0.3) {
+      noise += 45 + Math.random() * 20; // Spike to >50mm
+    }
+    return Math.max(0, Math.round((base + noise + i * 0.5) * 10) / 10);
   });
 }
 
@@ -55,9 +59,10 @@ function initChart(district) {
   
   // Use cached trend if available, otherwise generate and cache
   if (!TREND_CACHE[district]) {
+    const isHigh = data.risk === 'high';
     TREND_CACHE[district] = {
       temps: generateTrend(data.temp, 3),
-      rains: generateTrend(data.rainfall, 4)
+      rains: generateTrend(data.rainfall, 4, isHigh)
     };
   }
   
