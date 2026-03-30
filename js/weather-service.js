@@ -4,7 +4,7 @@
    ============================================================ */
 
 const WeatherService = {
-    BASE_URL: 'http://localhost:5000/api/weather',
+    BASE_URL: (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : 'http://localhost:5000') + '/api/weather',
     CACHE_EXPIRY: 5 * 60 * 1000, // 5 minutes in ms
 
     // Geographic Coordinates for Uttarakhand Districts

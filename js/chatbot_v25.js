@@ -5,7 +5,7 @@
    ============================================================ */
 
 // ── Chat API Configuration ─────────────────────────────────
-const CHAT_URL = 'http://localhost:5000/api/chat';
+const CHAT_URL = (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : 'http://localhost:5000') + '/api/chat';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 // ── System Prompt ────────────────────────────────────────────
