@@ -1,14 +1,17 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from models_inference import VrikshInference
 import os
+import sys
 import uuid
 import requests
 from dotenv import load_dotenv
 
 # load_dotenv() - Replaced with robust path loading below
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
 load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+from models_inference import VrikshInference
 
 app = Flask(__name__)
 CORS(app)
@@ -46,13 +49,17 @@ def health():
 def predict_crop():
     data = request.json
     try:
-        # Features: N, P, K, ph (Matching trained checkpoint shape)
-        n  = float(data.get('n'))
-        p  = float(data.get('p'))
-        k  = float(data.get('k'))
-        ph = float(data.get('ph'))
+        # Extract 7 features for the new Random Forest model
+        # Supporting both frontend naming ('hum', 'rain') and standard names
+        n        = float(data.get('n'))
+        p        = float(data.get('p'))
+        k        = float(data.get('k'))
+        temp     = float(data.get('temp', 25.0))
+        humidity = float(data.get('humidity', data.get('hum', 50.0)))
+        ph       = float(data.get('ph'))
+        rainfall = float(data.get('rainfall', data.get('rain', 100.0)))
         
-        results = inference.predict_crop(n, p, k, ph)
+        results = inference.predict_crop(n, p, k, temp, humidity, ph, rainfall)
         return jsonify({"status": "success", "predictions": results})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400

@@ -1,134 +1,119 @@
-import torch
-import torch.nn as nn
-from torchvision import models, transforms
-import joblib
-import pandas as pd
-import numpy as np
-from PIL import Image
 import os
+import pickle
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow.keras.preprocessing import image as keras_image
+import joblib
 
-# ── Crop Recommendation MLP ────────────────────────────────────
-class CropTabularMLP(nn.Module):
-    def __init__(self, input_dim, num_classes):
-        super(CropTabularMLP, self).__init__()
-        self.net = nn.Sequential(
-            nn.Linear(input_dim, 128),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, num_classes)
-        )
-
-    def forward(self, x):
-        return self.net(x)
-
-# ── Inference Engine Class ──────────────────────────────────────
 class VrikshInference:
     def __init__(self, model_dir='models'):
         self.model_dir = model_dir
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.crop_model = None
+        self.crop_le = None
+        self.crop_scaler = None
+        self.soil_model = None
+        self.soil_labels = []
+        self.fert_model = None
+        self.fert_features = []
+        self.fert_labels = None
+        self.load_models()
         
-        # Load Labels
-        self.crop_labels = pd.read_csv(os.path.join(model_dir, 'crop_classes.csv'))['crop'].tolist()
-        with open(os.path.join(model_dir, 'soil_classes.txt'), 'r') as f:
-            self.soil_labels = [line.strip() for line in f.readlines() if line.strip()]
-        
-        # Load Crop Model
-        self.crop_model = CropTabularMLP(4, len(self.crop_labels))
-        self.crop_model.load_state_dict(torch.load(os.path.join(model_dir, 'crop_recommendation_model.pth'), map_location=self.device, weights_only=False))
-        self.crop_model.to(self.device).eval()
-        
-        # Load Soil Vision Model
-        self.soil_model = models.mobilenet_v3_small()
-        num_ftrs = self.soil_model.classifier[0].in_features
-        self.soil_model.classifier = nn.Sequential(
-            nn.Linear(num_ftrs, 128),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(128, len(self.soil_labels))
-        )
-        self.soil_model.load_state_dict(torch.load(os.path.join(model_dir, 'soil_vision_model.pth'), map_location=self.device, weights_only=False))
-        self.soil_model.to(self.device).eval()
-        
-        # Load Fertilizer Model
-        self.fert_model = joblib.load(os.path.join(model_dir, 'fertilizer_rf_model.joblib'))
-        self.fert_features = joblib.load(os.path.join(model_dir, 'fertilizer_feature_names.joblib'))
-        self.fert_labels = joblib.load(os.path.join(model_dir, 'fertilizer_labels.joblib'))
+    def load_models(self):
+        # 1. Load Crop Recommendation Models (Random Forest)
+        try:
+            with open(os.path.join(self.model_dir, 'crop_rf_model.pkl'), 'rb') as f:
+                self.crop_model = pickle.load(f)
+            with open(os.path.join(self.model_dir, 'crop_label_encoder.pkl'), 'rb') as f:
+                self.crop_le = pickle.load(f)
+            with open(os.path.join(self.model_dir, 'crop_scaler.pkl'), 'rb') as f:
+                self.crop_scaler = pickle.load(f)
+            print("Crop Recommendation models loaded successfully.")
+        except Exception as e:
+            print(f"Error loading Crop Recommendation models: {e}")
+            self.crop_model = None
+            
+        # 2. Load Soil Classification Model (Keras/H5)
+        try:
+            self.soil_model = tf.keras.models.load_model(os.path.join(self.model_dir, 'soil_classifier_model.h5'))
+            self.soil_labels = ['Alluvial_Soil', 'Arid_Soil', 'Black_Soil', 'Laterite_Soil', 'Mountain_Soil', 'Red_Soil', 'Yellow_Soil']
+            print("Soil Classification model loaded successfully.")
+        except Exception as e:
+            print(f"Error loading Soil Classification model: {e}")
+            self.soil_model = None
+            
+        # 3. Load Fertilizer Model (Kept from previous version)
+        try:
+            self.fert_model = joblib.load(os.path.join(self.model_dir, 'fertilizer_rf_model.joblib'))
+            self.fert_features = joblib.load(os.path.join(self.model_dir, 'fertilizer_feature_names.joblib'))
+            self.fert_labels = joblib.load(os.path.join(self.model_dir, 'fertilizer_labels.joblib'))
+            print("Fertilizer model loaded successfully.")
+        except Exception as e:
+            print(f"Error loading Fertilizer model: {e}")
+            self.fert_model = None
 
-        # Image Transforms
-        self.soil_transforms = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-
-    def predict_crop(self, n, p, k, ph):
-        # ── Scaling (Manual StandardScaler) ───────────────────
-        # Exact values from 4-feature retraining run
-        # Means: [50.5518, 53.3627, 48.1491, 6.4695]
-        # Stds:  [36.9089, 32.9784, 50.6364, 0.7738]
-        n_s  = (n - 50.5518) / 36.9089
-        p_s  = (p - 53.3627) / 32.9784
-        k_s  = (k - 48.1491) / 50.6364
-        ph_s = (ph - 6.4695) / 0.7738
+    def predict_crop(self, n, p, k, temp, humidity, ph, rainfall):
+        if self.crop_model is None:
+            return [{"crop": "Model Error", "confidence": 0, "probability": 0}]
         
-        input_data = torch.tensor([[n_s, p_s, k_s, ph_s]], dtype=torch.float32).to(self.device)
-        with torch.no_grad():
-            outputs = self.crop_model(input_data)
-            probs = torch.softmax(outputs, dim=1).cpu().numpy()[0]
+        # New model uses 7 features: N, P, K, temp, humidity, ph, rainfall
+        features = np.array([[n, p, k, temp, humidity, ph, rainfall]])
+        features_scaled = self.crop_scaler.transform(features)
+        
+        # Random Forest predict_proba gives probabilities for all classes
+        probs = self.crop_model.predict_proba(features_scaled)[0]
+        classes = self.crop_le.classes_
         
         results = []
         for i, prob in enumerate(probs):
+            p_val = float(prob)
             results.append({
-                "crop": self.crop_labels[i],
-                "probability": float(prob),
-                "confidence": round(float(prob) * 100, 2)
+                "crop": classes[i],
+                "probability": p_val,
+                "confidence": float(np.round(p_val * 100, 2))
             })
+        
+        # Sort by probability descending
         return sorted(results, key=lambda x: x['probability'], reverse=True)
 
     def predict_soil(self, image_path):
-        img = Image.open(image_path).convert('RGB')
-        img_t = self.soil_transforms(img).unsqueeze(0).to(self.device)
+        if self.soil_model is None:
+            return [{"soil": "Model Error", "confidence": 0, "probability": 0}]
         
-        with torch.no_grad():
-            outputs = self.soil_model(img_t)
-            probs = torch.softmax(outputs, dim=1).cpu().numpy()[0]
+        # Preprocess image for MobileNetV2 (Keras)
+        img = keras_image.load_img(image_path, target_size=(224, 224))
+        img_array = keras_image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0) / 255.0
+        
+        predictions = self.soil_model.predict(img_array)
+        probs = predictions[0]
         
         results = []
         for i, prob in enumerate(probs):
+            p_val = float(prob)
             results.append({
                 "soil": self.soil_labels[i],
-                "probability": float(prob),
-                "confidence": round(float(prob) * 100, 2)
+                "probability": p_val,
+                "confidence": float(np.round(p_val * 100, 2))
             })
+            
         return sorted(results, key=lambda x: x['probability'], reverse=True)
 
     def predict_fertilizer(self, soil_type, crop_type, n, p, k):
-        # Prepare feature vector based on saved feature names
-        # Example feature name: 'Soil Type_Lava' or 'Crop Type_Potato'
-        data = {feat: 0 for feat in self.fert_features}
+        if self.fert_model is None:
+            return "Fertilizer model Error"
+            
+        # Initialize dictionary with explicit float values to satisfy linter
+        data = {str(feat): float(0) for feat in self.fert_features}
+        if 'Nitrogen' in data: data['Nitrogen'] = float(n)
+        if 'Phosphorous' in data: data['Phosphorous'] = float(p)
+        if 'Potassium' in data: data['Potassium'] = float(k)
         
-        # Numeric features
-        if 'Nitrogen' in data: data['Nitrogen'] = n
-        if 'Phosphorous' in data: data['Phosphorous'] = p
-        if 'Potassium' in data: data['Potassium'] = k
-        
-        # Categorical features (one-hot)
         soil_col = f'Soil Type_{soil_type}'
         crop_col = f'Crop Type_{crop_type}'
         
         if soil_col in data: data[soil_col] = 1
         if crop_col in data: data[crop_col] = 1
         
-        # Create DataFrame to match training order
         df = pd.DataFrame([data])[self.fert_features]
-        
-        # Predict
-        pred = self.fert_model.predict(df)[0]
-        # In this GB model, the output is often the label string itself if trained that way, 
-        # or an index. Let's check training code.
-        # GB trained with y as Fertilizer Name (strings). 
-        # So return directly.
-        return pred
+        return self.fert_model.predict(df)[0]

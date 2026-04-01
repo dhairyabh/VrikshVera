@@ -160,10 +160,10 @@ class VrikshMLEngine {
   get metadata() {
     return {
       type:           'Unified Cloud Inference',
-      backend:        'Flask/PyTorch/SKLearn',
-      recommender:    'Tabular MLP (94.2%)',
-      vision:         'MobileNetV3 Small',
-      fertilizer:     'Gradient Boosting'
+      backend:        'Flask/TensorFlow/SKLearn',
+      recommender:    'Random Forest (93.0%)',
+      vision:         'MobileNetV2',
+      fertilizer:     'Random Forest'
     };
   }
 }
