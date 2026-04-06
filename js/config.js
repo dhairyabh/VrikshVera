@@ -5,4 +5,4 @@
    For local development, use 'http://localhost:5000'
    ============================================================ */
 
-const BACKEND_URL = 'https://vrikshvera-1.onrender.com';
+const BACKEND_URL = window.location.origin;

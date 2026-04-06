@@ -9,7 +9,7 @@ from models_inference import VrikshInference
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../', static_url_path='')
 CORS(app)  # Enable CORS for all routes
 
 # API Keys from .env
@@ -192,6 +192,21 @@ def predict_fertilizer():
         
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
+
+# ── Frontend Routes ─────────────────────────────────────────────
+
+@app.route('/')
+def index():
+    """Serve the landing page."""
+    return app.send_static_file('index.html')
+
+@app.route('/<path:path>')
+def serve_any(path):
+    """Serve any other static files or fallback to index for SPA behavior."""
+    if path and os.path.exists(os.path.join(app.static_folder, path)):
+        return app.send_static_file(path)
+    # If not found, fallback to index (helpful for navigation)
+    return app.send_static_file('index.html')
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
