@@ -6,7 +6,7 @@
 
 class VrikshMLEngine {
   constructor() {
-    this.apiBase  = 'http://localhost:5000';
+    this.apiBase  = (typeof BACKEND_URL !== 'undefined') ? BACKEND_URL : 'http://localhost:5000';
     this.loaded   = false; // Set true once backend is confirmed reachable
     this.loading  = false;
     this._retries = 0;
