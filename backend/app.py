@@ -9,7 +9,11 @@ from models_inference import VrikshInference
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__, static_folder='../', static_url_path='')
+# Calculate absolute root path (parent of backend/)
+ROOT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+print(f"--- Unified Server Root: {ROOT_PATH} ---")
+
+app = Flask(__name__, static_folder=ROOT_PATH, static_url_path='')
 CORS(app)  # Enable CORS for all routes
 
 # API Keys from .env
@@ -194,19 +198,21 @@ def predict_fertilizer():
         return jsonify({"status": "error", "message": str(e)}), 400
 
 # ── Frontend Routes ─────────────────────────────────────────────
+from flask import send_from_directory
 
 @app.route('/')
 def index():
-    """Serve the landing page."""
-    return app.send_static_file('index.html')
+    """Serve the landing page from the absolute root."""
+    return send_from_directory(app.static_folder, 'index.html')
 
 @app.route('/<path:path>')
-def serve_any(path):
-    """Serve any other static files or fallback to index for SPA behavior."""
+def serve_static(path):
+    """Serve any other static files from the absolute root or fallback to index."""
     if path and os.path.exists(os.path.join(app.static_folder, path)):
-        return app.send_static_file(path)
-    # If not found, fallback to index (helpful for navigation)
-    return app.send_static_file('index.html')
+        return send_from_directory(app.static_folder, path)
+    
+    # Fallback for SPA behavior
+    return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
