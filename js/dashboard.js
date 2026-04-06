@@ -254,6 +254,26 @@ function updateCropCalendar(district) {
   if (!el) return;
   const crops = CROP_CALENDAR[district] || [];
   el.innerHTML = crops.map(c => `<span class="badge badge-green">${window.t('crop.' + c)}</span>`).join('');
+  
+  // Also update month and tip
+  updateDynamicDateContent();
+}
+
+/**
+ * Updates the Month Badge and Seasonal Tip based on current date and language
+ */
+function updateDynamicDateContent() {
+  const monthIdx = new Date().getMonth(); // 0-11
+  
+  const monthBadge = document.getElementById('cal-month-badge');
+  if (monthBadge) {
+    monthBadge.textContent = window.t('dash.month.' + monthIdx);
+  }
+  
+  const tipText = document.getElementById('cal-tip-text');
+  if (tipText) {
+    tipText.textContent = window.t('dash.tip.' + monthIdx);
+  }
 }
 
 // ── Main Refresh ─────────────────────────────────────────────

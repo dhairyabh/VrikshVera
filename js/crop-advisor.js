@@ -138,10 +138,10 @@ async function buildMLInput(data) {
     n:    data.n,
     p:    data.p,
     k:    data.k,
-    temp: temp,
-    hum:  Math.min(100, Math.max(10, hum + humAdj)),
-    ph:   data.ph,
-    rain: rain
+    temp:     temp,
+    humidity: Math.min(100, Math.max(10, hum + humAdj)),
+    ph:       data.ph,
+    rainfall: rain
   };
 }
 
@@ -234,7 +234,7 @@ function renderResults(results, mlInput) {
           <div class="result-footer">
             <div style="display:flex;flex-direction:column;gap:4px">
               <span class="text-muted" style="font-size:0.78rem">
-                🤖 Unified ML · 94.2% AI Accuracy
+                🤖 Unified ML · 93.0% AI Accuracy
               </span>
               <button class="btn btn-sm btn-outline" 
                       style="font-size:0.7rem;padding:4px 8px" 

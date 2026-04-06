@@ -46,20 +46,20 @@ async function buildDistrictGrid() {
     highBadge.textContent = window.t('risk.status.calculating');
   }
 
-  // Iterate and update with live weather if possible
-  for (const [name, data] of Object.entries(DISTRICT_RISK)) {
+  // Parallel fetch and update with live weather
+  const districts = Object.entries(DISTRICT_RISK);
+  await Promise.all(districts.map(async ([name, data]) => {
     const live = await window.WeatherService.getWeather(name);
     if (live) {
       // Dynamic shift: heavy rain increases flood/landslide risk
-      // extreme temp increases frost/heat risk
-      if (live.rainfall > 10) data.landslide = Math.min(100, data.landslide + 15);
-      if (live.rainfall > 5) data.flood = Math.min(100, data.flood + 10);
-      if (live.temp < 5) data.frost = Math.min(100, data.frost + 20);
+      if (live.rainfall > 10) data.landslide = Math.min(100, (data.landslide || 0) + 15);
+      if (live.rainfall > 5) data.flood = Math.min(100, (data.flood || 0) + 10);
+      if (live.temp < 5) data.frost = Math.min(100, (data.frost || 0) + 20);
       
       // Recompute overall
       data.overall = Math.round((data.landslide + data.flood + data.drought + data.frost) / 4);
     }
-  }
+  }));
 
   grid.innerHTML = '';
   Object.entries(DISTRICT_RISK).forEach(([name, data]) => {

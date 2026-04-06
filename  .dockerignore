@@ -1,9 +1,0 @@
-.git
-.vscode
-.agents
-.agent
-/tmp
-*.md
-Dockerfile
-.dockerignore
-docker-compose.yml
