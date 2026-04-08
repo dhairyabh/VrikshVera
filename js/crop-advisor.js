@@ -691,12 +691,12 @@ function showFertilizerModal(crop, advice, n, p, k) {
 
 window.getFertilizerAdvice = async (crop, soil, n, p, k) => {
   try {
-    const currentLang = localStorage.getItem('vrikshVeraLang') || 'en';
+    const currentLang = localStorage.getItem('km-lang') || 'en';
     const advice = await window.VrikshML.predictFertilizer(soil, crop, n, p, k, currentLang);
     showFertilizerModal(crop, advice, n, p, k);
   } catch (err) {
     console.error('Fertilizer advice error:', err);
-    const errMsg = (localStorage.getItem('vrikshVeraLang') === 'hi') 
+    const errMsg = (localStorage.getItem('km-lang') === 'hi') 
       ? 'AI बैकएंड से कनेक्ट नहीं हो सका। कृपया बाद में प्रयास करें।' 
       : 'Could not connect to AI backend. Please ensure the backend is running and try again.';
     showFertilizerModal(crop, errMsg, n, p, k);
