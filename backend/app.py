@@ -178,23 +178,72 @@ def predict_soil():
 def predict_fertilizer():
     try:
         data = request.json
-        crop = data.get('crop_type', '').lower()
+        crop = data.get('crop_type', 'unknown').capitalize()
+        soil = data.get('soil_type', 'unknown').capitalize()
         n = float(data.get('n', 0))
         p = float(data.get('p', 0))
         k = float(data.get('k', 0))
+
+        print(f"--- AI Fertilizer Advisory: {crop} in {soil} (N:{n}, P:{p}, K:{k}) ---")
+
+        # 1. Try AI-Powered Advice (Groq)
+        if GROQ_API_KEY:
+            try:
+                url = "https://api.groq.com/openai/v1/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json"
+                }
+                
+                system_prompt = "You are a senior agronomist at an agricultural research institute. You provide precise, scientific, and actionable fertilizer advice based on soil nutrient levels (N, P, K), soil type, and crop type. Keep responses to 2-3 short sentences. Use standard fertilizer names like Urea (46-0-0), DAP (18-46-0), and MOP (0-0-60) where applicable."
+                
+                user_msg = f"Provide a concise fertilizer recommendation for growing {crop} in {soil} soil. The current soil nutrient levels are Nitrogen (N): {n}, Phosphorus (P): {p}, and Potassium (K): {k}. What fertilizers should be applied and in what focus?"
+                
+                payload = {
+                    "model": "llama-3.1-70b-versatile",
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_msg}
+                    ],
+                    "temperature": 0.5,
+                    "max_tokens": 150
+                }
+                
+                res = requests.post(url, headers=headers, json=payload, timeout=5)
+                if res.status_code == 200:
+                    ai_advice = res.json()['choices'][0]['message']['content'].strip()
+                    print(f"AI Success: {ai_advice[:50]}...")
+                    return jsonify({
+                        "status": "success",
+                        "recommendation": ai_advice,
+                        "engine": "AI (Groq)"
+                    })
+                else:
+                    print(f"AI API Error: {res.status_code}")
+            except Exception as ai_err:
+                print(f"AI Advisory Failure: {ai_err}")
+
+        # 2. Robust Rule-Based Fallback
+        print("Using Rule-Based Fallback...")
+        recs = []
+        if n < 40: recs.append(f"Soil is low in Nitrogen ({n}). Apply Urea to support vegetative growth for {crop}.")
+        elif n > 150: recs.append(f"Nitrogen level ({n}) is high; avoid excessive Urea to prevent lodging.")
         
-        recommendations = []
-        if n < 30: recommendations.append("Apply High Nitrogen fertilizer (Urea)")
-        if p < 20: recommendations.append("Use Phosphorus-rich fertilizer (DAP)")
-        if k < 20: recommendations.append("Add Potassium supplement (MOP)")
-        if not recommendations: recommendations.append("Balanced soil nutrients. Continue regular composting.")
-            
+        if p < 25: recs.append(f"Phosphorus is deficient ({p}). Use DAP (18-46-0) to boost root development.")
+        
+        if k < 20: recs.append(f"Potassium is low ({k}). Apply MOP (Muriate of Potash) for better {crop} quality.")
+        
+        if not recs:
+            recs.append(f"Nutrient levels (N:{n}, P:{p}, K:{k}) are well-balanced for {crop} in {soil} soil. Maintain health with organic compost.")
+        
         return jsonify({
             "status": "success",
-            "recommendation": " | ".join(recommendations)
+            "recommendation": " ".join(recs),
+            "engine": "Rule-Based Engine"
         })
         
     except Exception as e:
+        print(f"Fertilizer Route Error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 400
 
 # ── Frontend Routes ─────────────────────────────────────────────
