@@ -479,13 +479,213 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 });
 
+// ── Fertilizer Modal ──────────────────────────────────────────
+(function injectFertilizerModal() {
+  if (document.getElementById('fert-modal-overlay')) return;
+
+  // ── Inject CSS ──
+  const style = document.createElement('style');
+  style.textContent = `
+    #fert-modal-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(4, 12, 24, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #fert-modal-overlay.open {
+      opacity: 1; pointer-events: all;
+    }
+    #fert-modal {
+      background: linear-gradient(135deg, rgba(10,22,40,0.97), rgba(6,16,30,0.97));
+      border: 1px solid rgba(0,229,113,0.22);
+      border-radius: 20px;
+      padding: 0;
+      width: min(540px, 94vw);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(0,229,113,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+      transform: translateY(28px) scale(0.96);
+      transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease;
+      overflow: hidden;
+      opacity: 0;
+    }
+    #fert-modal-overlay.open #fert-modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    #fert-modal-header {
+      background: linear-gradient(90deg, rgba(0,229,113,0.12), rgba(74,158,255,0.06));
+      border-bottom: 1px solid rgba(0,229,113,0.15);
+      padding: 1.4rem 1.6rem 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    #fert-modal-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0,229,113,0.2), rgba(74,158,255,0.12));
+      border: 1px solid rgba(0,229,113,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      box-shadow: 0 4px 20px rgba(0,229,113,0.2);
+      flex-shrink: 0;
+      animation: fertIconPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes fertIconPulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(0,229,113,0.2); }
+      50%       { box-shadow: 0 4px 30px rgba(0,229,113,0.45); }
+    }
+    #fert-modal-title {
+      font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700;
+      color: #e8f4f0; line-height: 1.3;
+    }
+    #fert-modal-subtitle {
+      font-size: 0.78rem; color: rgba(120,160,185,0.85); margin-top: 3px;
+    }
+    #fert-modal-close {
+      margin-left: auto; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 50%;
+      width: 32px; height: 32px; cursor: pointer; color: #7a9eb5;
+      font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    #fert-modal-close:hover { background: rgba(255,80,80,0.15); color: #ff6b6b; border-color: rgba(255,80,80,0.3); }
+    #fert-modal-body { padding: 1.5rem 1.6rem; }
+    #fert-advice-box {
+      background: rgba(0,229,113,0.05);
+      border: 1px solid rgba(0,229,113,0.15);
+      border-radius: 12px;
+      padding: 1.1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      font-size: 0.95rem;
+      color: #c8e8d8;
+      line-height: 1.65;
+      position: relative;
+      overflow: hidden;
+    }
+    #fert-advice-box::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: linear-gradient(180deg, #00e571, #4a9eff);
+      border-radius: 3px 0 0 3px;
+    }
+    .fert-npk-row {
+      display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap;
+    }
+    .fert-npk-badge {
+      flex: 1; min-width: 90px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 10px 12px; text-align: center;
+      transition: transform 0.2s;
+    }
+    .fert-npk-badge:hover { transform: translateY(-2px); }
+    .fert-npk-badge .npk-val {
+      font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800;
+      line-height: 1;
+    }
+    .fert-npk-badge .npk-lbl {
+      font-size: 0.7rem; color: rgba(120,160,185,0.8); margin-top: 4px; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    #fert-info-note {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(74,158,255,0.06);
+      border: 1px solid rgba(74,158,255,0.15);
+      border-radius: 10px; padding: 0.85rem 1rem;
+      font-size: 0.8rem; color: rgba(120,160,185,0.9); line-height: 1.5;
+    }
+    #fert-modal-footer {
+      padding: 1rem 1.6rem 1.4rem;
+      display: flex; gap: 10px; justify-content: flex-end;
+    }
+    #fert-btn-ok {
+      background: linear-gradient(135deg, #00e571, #00bb58);
+      border: none; border-radius: 12px;
+      padding: 0.7rem 1.8rem;
+      font-family: 'Outfit', sans-serif; font-size: 0.92rem; font-weight: 700;
+      color: #04101a; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,229,113,0.35);
+      transition: all 0.25s;
+    }
+    #fert-btn-ok:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,229,113,0.5); }
+    #fert-btn-ok:active { transform: scale(0.97); }
+  `;
+  document.head.appendChild(style);
+
+  // ── Inject HTML ──
+  const overlay = document.createElement('div');
+  overlay.id = 'fert-modal-overlay';
+  overlay.innerHTML = `
+    <div id="fert-modal" role="dialog" aria-modal="true" aria-labelledby="fert-modal-title">
+      <div id="fert-modal-header">
+        <div id="fert-modal-icon">🧪</div>
+        <div>
+          <div id="fert-modal-title">Fertilizer Recommendation</div>
+          <div id="fert-modal-subtitle">AI-powered, soil N-P-K analysis</div>
+        </div>
+        <button id="fert-modal-close" aria-label="Close">✕</button>
+      </div>
+      <div id="fert-modal-body">
+        <div class="fert-npk-row" id="fert-npk-row"></div>
+        <div id="fert-advice-box"></div>
+        <div id="fert-info-note">
+          <span style="font-size:1.1rem;flex-shrink:0;">💡</span>
+          <span>This advice is based on your current soil N-P-K levels, soil type, and crop requirements. Consult a local agronomist for precise dosage.</span>
+        </div>
+      </div>
+      <div id="fert-modal-footer">
+        <button id="fert-btn-ok">✅ Got it!</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  // ── Close handlers ──
+  const close = () => overlay.classList.remove('open');
+  document.getElementById('fert-modal-close').addEventListener('click', close);
+  document.getElementById('fert-btn-ok').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+})();
+
+function showFertilizerModal(crop, advice, n, p, k) {
+  const overlay = document.getElementById('fert-modal-overlay');
+  if (!overlay) return;
+
+  // Update header
+  document.getElementById('fert-modal-title').textContent = `Fertilizer Recommendation for ${crop.charAt(0).toUpperCase() + crop.slice(1)}`;
+
+  // Update NPK badges
+  const npkData = [
+    { val: n, lbl: 'Nitrogen (N)', color: '#00e571' },
+    { val: p, lbl: 'Phosphorus (P)', color: '#4a9eff' },
+    { val: k, lbl: 'Potassium (K)', color: '#b06aff' }
+  ];
+  document.getElementById('fert-npk-row').innerHTML = npkData.map(d => `
+    <div class="fert-npk-badge">
+      <div class="npk-val" style="color:${d.color}">${d.val}</div>
+      <div class="npk-lbl">${d.lbl}</div>
+    </div>
+  `).join('');
+
+  // Update advice
+  const adviceEl = document.getElementById('fert-advice-box');
+  // Format advice with bullet points if it contains commas
+  const formatted = advice.includes(',')
+    ? advice.split(',').map(s => `• ${s.trim()}`).join('<br>')
+    : advice;
+  adviceEl.innerHTML = formatted;
+
+  // Open with animation
+  overlay.classList.add('open');
+}
+
 window.getFertilizerAdvice = async (crop, soil, n, p, k) => {
   try {
     const advice = await window.VrikshML.predictFertilizer(soil, crop, n, p, k);
-    alert(`🧪 Fertilizer Recommendation for ${crop}:\n\nUse: ${advice}\n\nThis advice is based on your current soil N-P-K levels and crop requirements.`);
+    showFertilizerModal(crop, advice, n, p, k);
   } catch (err) {
     console.error('Fertilizer advice error:', err);
-    alert('Failed to get fertilizer advice. Please check your backend connection.');
+    showFertilizerModal(crop, 'Could not connect to AI backend. Please ensure the backend is running and try again.', n, p, k);
   }
 };
 
