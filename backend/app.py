@@ -189,6 +189,7 @@ def predict_fertilizer():
         # 1. Try AI-Powered Advice (Groq)
         if GROQ_API_KEY:
             try:
+                print(f"[DEBUG] Attempting AI Advice with GROQ_API_KEY (ending in ...{GROQ_API_KEY[-4:]})")
                 url = "https://api.groq.com/openai/v1/chat/completions"
                 headers = {
                     "Authorization": f"Bearer {GROQ_API_KEY}",
@@ -197,44 +198,46 @@ def predict_fertilizer():
                 
                 system_prompt = "You are a senior agronomist at an agricultural research institute. You provide precise, scientific, and actionable fertilizer advice based on soil nutrient levels (N, P, K), soil type, and crop type. Keep responses to 2-3 short sentences. Use standard fertilizer names like Urea (46-0-0), DAP (18-46-0), and MOP (0-0-60) where applicable."
                 
-                user_msg = f"Provide a concise fertilizer recommendation for growing {crop} in {soil} soil. The current soil nutrient levels are Nitrogen (N): {n}, Phosphorus (P): {p}, and Potassium (K): {k}. What fertilizers should be applied and in what focus?"
+                user_msg = f"Provide a concise fertilizer recommendation for growing {crop} in {soil} soil. Current soil levels: N={n}, P={p}, K={k}. What specific fertilizers and focus areas do you recommend?"
                 
+                # Using llama-3.3-70b-versatile (latest stable) or fallback to llama3-70b-8192
                 payload = {
-                    "model": "llama-3.1-70b-versatile",
+                    "model": "llama-3.3-70b-versatile",
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_msg}
                     ],
-                    "temperature": 0.5,
+                    "temperature": 0.4,
                     "max_tokens": 150
                 }
                 
-                res = requests.post(url, headers=headers, json=payload, timeout=5)
+                res = requests.post(url, headers=headers, json=payload, timeout=12)
                 if res.status_code == 200:
                     ai_advice = res.json()['choices'][0]['message']['content'].strip()
-                    print(f"AI Success: {ai_advice[:50]}...")
+                    print(f"[DEBUG] AI Success: {ai_advice[:60]}...")
                     return jsonify({
                         "status": "success",
                         "recommendation": ai_advice,
                         "engine": "AI (Groq)"
                     })
                 else:
-                    print(f"AI API Error: {res.status_code}")
+                    error_detail = res.text
+                    print(f"[DEBUG] AI API Error {res.status_code}: {error_detail}")
             except Exception as ai_err:
-                print(f"AI Advisory Failure: {ai_err}")
+                print(f"[DEBUG] AI Advisory Exception: {type(ai_err).__name__}: {ai_err}")
 
         # 2. Robust Rule-Based Fallback
-        print("Using Rule-Based Fallback...")
+        print("[DEBUG] Falling back to Rule-Based Engine")
         recs = []
-        if n < 40: recs.append(f"Soil is low in Nitrogen ({n}). Apply Urea to support vegetative growth for {crop}.")
-        elif n > 150: recs.append(f"Nitrogen level ({n}) is high; avoid excessive Urea to prevent lodging.")
+        if n < 40: recs.append(f"Soil Nitrogen ({n}) is low. Apply Urea to support vegetative growth for {crop}.")
+        elif n > 150: recs.append(f"Nitrogen level ({n}) is quite high; avoid excessive Urea to prevent lodging.")
         
         if p < 25: recs.append(f"Phosphorus is deficient ({p}). Use DAP (18-46-0) to boost root development.")
         
-        if k < 20: recs.append(f"Potassium is low ({k}). Apply MOP (Muriate of Potash) for better {crop} quality.")
+        if k < 20: recs.append(f"Potassium is low ({k}). Apply MOP (Muriate of Potash) for better crop quality and disease resistance.")
         
         if not recs:
-            recs.append(f"Nutrient levels (N:{n}, P:{p}, K:{k}) are well-balanced for {crop} in {soil} soil. Maintain health with organic compost.")
+            recs.append(f"Nutrient levels (N:{n}, P:{p}, K:{k}) are currently well-balanced for {crop} in {soil} soil based on standard thresholds. Maintain soil health with organic compost.")
         
         return jsonify({
             "status": "success",
