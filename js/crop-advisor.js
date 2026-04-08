@@ -234,15 +234,15 @@ function renderResults(results, mlInput) {
           <div class="result-footer">
             <div style="display:flex;flex-direction:column;gap:4px">
               <span class="text-muted" style="font-size:0.78rem">
-                🤖 Unified ML · 93.0% AI Accuracy
+                🤖 ${window.t('label.UnifiedML')} · 93.0% ${window.t('label.accuracy')}
               </span>
               <button class="btn btn-sm btn-outline" 
                       style="font-size:0.7rem;padding:4px 8px" 
                       onclick="window.getFertilizerAdvice('${r.crop}', '${formData.soil}', ${formData.n}, ${formData.p}, ${formData.k})">
-                🧪 Get Fertilizer Advice
+                🧪 ${window.t('btn.fertilizer')}
               </button>
             </div>
-            <span class="badge badge-green" style="font-size:0.72rem">Match: ${conf}%</span>
+            <span class="badge badge-green" style="font-size:0.72rem">${window.t('label.Match')}: ${conf}%</span>
           </div>
         </div>
       </div>
@@ -270,9 +270,13 @@ function renderResults(results, mlInput) {
 
 function renderFeaturePills(container, rangeCheck) {
   const labels = {
-    N: '🌱 Nitrogen', P: '🔵 Phosphorus', K: '🟣 Potassium',
-    temperature: '🌡️ Temp', humidity: '💧 Humidity',
-    ph: '⚗️ pH', rainfall: '🌧️ Rainfall'
+    N: '🌱 ' + window.t('label.Nitrogen'), 
+    P: '🔵 ' + window.t('label.Phosphorus'), 
+    K: '🟣 ' + window.t('label.Potassium'),
+    temperature: '🌡️ ' + window.t('label.Temp'), 
+    humidity: '💧 ' + window.t('label.Humidity'),
+    ph: '⚗️ ' + window.t('label.ph'), 
+    rainfall: '🌧️ ' + window.t('label.Rainfall')
   };
   container.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;margin:0.75rem 0';
   for (const [feat, check] of Object.entries(rangeCheck)) {
@@ -620,7 +624,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div id="fert-modal-icon">🧪</div>
         <div>
           <div id="fert-modal-title">Fertilizer Recommendation</div>
-          <div id="fert-modal-subtitle">AI-powered, soil N-P-K analysis</div>
+          <div id="fert-modal-subtitle">${window.t('fert.modal.subtitle') || 'AI-powered, soil N-P-K analysis'}</div>
         </div>
         <button id="fert-modal-close" aria-label="Close">✕</button>
       </div>
@@ -629,11 +633,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div id="fert-advice-box"></div>
         <div id="fert-info-note">
           <span style="font-size:1.1rem;flex-shrink:0;">💡</span>
-          <span>This advice is based on your current soil N-P-K levels, soil type, and crop requirements. Consult a local agronomist for precise dosage.</span>
+          <span id="fert-modal-disclaimer">${window.t('fert.modal.note') || 'This advice is based on your current soil N-P-K levels, soil type, and crop requirements.'}</span>
         </div>
       </div>
       <div id="fert-modal-footer">
-        <button id="fert-btn-ok">✅ Got it!</button>
+        <button id="fert-btn-ok">${window.t('btn.gotit') || '✅ Got it!'}</button>
       </div>
     </div>
   `;
@@ -652,13 +656,19 @@ function showFertilizerModal(crop, advice, n, p, k) {
   if (!overlay) return;
 
   // Update header
-  document.getElementById('fert-modal-title').textContent = `Fertilizer Recommendation for ${crop.charAt(0).toUpperCase() + crop.slice(1)}`;
+  const fertTitle = window.t('fert.modal.title') || 'Fertilizer Recommendation for {crop}';
+  document.getElementById('fert-modal-title').textContent = fertTitle.replace('{crop}', crop.charAt(0).toUpperCase() + crop.slice(1));
+  
+  // Update static labels if language changed
+  document.getElementById('fert-modal-subtitle').textContent = window.t('fert.modal.subtitle') || 'AI-powered analysis';
+  document.getElementById('fert-modal-disclaimer').textContent = window.t('fert.modal.note') || 'Disclaimer text here';
+  document.getElementById('fert-btn-ok').textContent = window.t('btn.gotit') || '✅ Got it!';
 
   // Update NPK badges
   const npkData = [
-    { val: n, lbl: 'Nitrogen (N)', color: '#00e571' },
-    { val: p, lbl: 'Phosphorus (P)', color: '#4a9eff' },
-    { val: k, lbl: 'Potassium (K)', color: '#b06aff' }
+    { val: n, lbl: window.t('label.Nitrogen') || 'Nitrogen (N)', color: '#00e571' },
+    { val: p, lbl: window.t('label.Phosphorus') || 'Phosphorus (P)', color: '#4a9eff' },
+    { val: k, lbl: window.t('label.Potassium') || 'Potassium (K)', color: '#b06aff' }
   ];
   document.getElementById('fert-npk-row').innerHTML = npkData.map(d => `
     <div class="fert-npk-badge">
@@ -681,11 +691,15 @@ function showFertilizerModal(crop, advice, n, p, k) {
 
 window.getFertilizerAdvice = async (crop, soil, n, p, k) => {
   try {
-    const advice = await window.VrikshML.predictFertilizer(soil, crop, n, p, k);
+    const currentLang = localStorage.getItem('vrikshVeraLang') || 'en';
+    const advice = await window.VrikshML.predictFertilizer(soil, crop, n, p, k, currentLang);
     showFertilizerModal(crop, advice, n, p, k);
   } catch (err) {
     console.error('Fertilizer advice error:', err);
-    showFertilizerModal(crop, 'Could not connect to AI backend. Please ensure the backend is running and try again.', n, p, k);
+    const errMsg = (localStorage.getItem('vrikshVeraLang') === 'hi') 
+      ? 'AI बैकएंड से कनेक्ट नहीं हो सका। कृपया बाद में प्रयास करें।' 
+      : 'Could not connect to AI backend. Please ensure the backend is running and try again.';
+    showFertilizerModal(crop, errMsg, n, p, k);
   }
 };
 
