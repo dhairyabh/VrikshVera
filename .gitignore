@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+ENV/
+env/
+.env
+
+# Virtual Environments in subdirectories
+**/venv/
+**/.venv/
+**/env/
+**/ENV/
+# backend/models/ (keep them if small)
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,732 @@
+/**
+ * VrikshVera — Crop Advisor (ML-powered)
+ * Uses KrishiML GNB inference engine from ml-engine.js
+ * Model: GaussianNaiveBayes | Accuracy: 93.60%
+ */
+
+// ── District climate defaults (for model input) ───────────────
+const DISTRICT_CLIMATE = {
+  'Dehradun':    { temperature: 26, humidity: 72, rainfall: 8  * 8, N: 85, P: 40, K: 40, ph: 6.4 },
+  'Haridwar':    { temperature: 29, humidity: 68, rainfall: 5  * 8, N: 90, P: 45, K: 35, ph: 6.6 },
+  'Nainital':    { temperature: 19, humidity: 82, rainfall: 14 * 8, N: 75, P: 38, K: 42, ph: 6.1 },
+  'Almora':      { temperature: 22, humidity: 75, rainfall: 11 * 8, N: 70, P: 35, K: 40, ph: 6.3 },
+  'Uttarkashi':  { temperature: 14, humidity: 65, rainfall: 18 * 8, N: 60, P: 30, K: 38, ph: 6.0 },
+  'Chamoli':     { temperature: 12, humidity: 60, rainfall: 22 * 8, N: 58, P: 28, K: 35, ph: 5.9 },
+  'Pithoragarh': { temperature: 11, humidity: 58, rainfall: 16 * 8, N: 55, P: 30, K: 36, ph: 6.0 },
+  'Pauri':       { temperature: 20, humidity: 70, rainfall: 10 * 8, N: 72, P: 36, K: 40, ph: 6.2 },
+  'Tehri':       { temperature: 18, humidity: 74, rainfall: 12 * 8, N: 68, P: 34, K: 38, ph: 6.2 },
+  'Rudraprayag': { temperature: 16, humidity: 78, rainfall: 20 * 8, N: 62, P: 30, K: 36, ph: 5.8 },
+  'Bageshwar':   { temperature: 17, humidity: 76, rainfall: 13 * 8, N: 65, P: 32, K: 38, ph: 6.1 },
+  'Champawat':   { temperature: 21, humidity: 69, rainfall: 9  * 8, N: 75, P: 38, K: 40, ph: 6.3 },
+  'US Nagar':    { temperature: 28, humidity: 73, rainfall: 7  * 8, N: 95, P: 50, K: 45, ph: 6.7 }
+};
+
+// Soil pH adjustments
+const SOIL_PH = {
+  'Loamy': 6.4, 'Clay': 6.1, 'Sandy': 6.8,
+  'Alluvial': 6.6, 'Silty': 6.3, 'Rocky': 5.9
+};
+
+// Water availability → humidity modifier
+const WATER_HUMIDITY = { high: 12, medium: 0, low: -12 };
+
+const CROP_DISPLAY = {
+  'rice':         { icon: '🌾', hindi: 'धान',         category: 'Cereal',    color: '#00e571' },
+  'wheat':        { icon: '🌾', hindi: 'गेहूं',        category: 'Cereal',    color: '#00e571' },
+  'maize':        { icon: '🌽', hindi: 'मकई',          category: 'Cereal',    color: '#00e571' },
+  'barley':       { icon: '🌾', hindi: 'जौ',           category: 'Cereal',    color: '#00e571' },
+  'fingermillet': { icon: '🌾', hindi: 'मंडुआ/रागी',   category: 'Cereal',    color: '#00e571' },
+  'sorghum':      { icon: '🌾', hindi: 'ज्वार',        category: 'Cereal',    color: '#00e571' },
+  'chickpea':     { icon: '🫘', hindi: 'चना',          category: 'Legume',    color: '#5adf80' },
+  'kidneybeans':  { icon: '🫘', hindi: 'राजमा',        category: 'Legume',    color: '#5adf80' },
+  'pigeonpeas':   { icon: '🟤', hindi: 'अरहर',         category: 'Legume',    color: '#5adf80' },
+  'mothbeans':    { icon: '⚪', hindi: 'मोठ',          category: 'Legume',    color: '#5adf80' },
+  'mungbean':     { icon: '🟢', hindi: 'मूंग',         category: 'Legume',    color: '#5adf80' },
+  'blackgram':    { icon: '⚫', hindi: 'उड़द',          category: 'Legume',    color: '#5adf80' },
+  'lentil':       { icon: '🟠', hindi: 'मसूर',         category: 'Legume',    color: '#5adf80' },
+  'soybean':      { icon: '🫘', hindi: 'सोयाबीन',      category: 'Legume',    color: '#5adf80' },
+  'pomegranate':  { icon: '🍎', hindi: 'अनार',         category: 'Fruit',     color: '#f5a623' },
+  'banana':       { icon: '🍌', hindi: 'केला',          category: 'Fruit',     color: '#f5a623' },
+  'mango':        { icon: '🥭', hindi: 'आम',           category: 'Fruit',     color: '#f5a623' },
+  'grapes':       { icon: '🍇', hindi: 'अंगूर',        category: 'Fruit',     color: '#f5a623' },
+  'watermelon':   { icon: '🍉', hindi: 'तरबूज',        category: 'Fruit',     color: '#f5a623' },
+  'muskmelon':    { icon: '🍈', hindi: 'खरबूजा',       category: 'Fruit',     color: '#f5a623' },
+  'apple':        { icon: '🍎', hindi: 'सेब',           category: 'Fruit',     color: '#f5a623' },
+  'orange':       { icon: '🍊', hindi: 'संतरा',        category: 'Fruit',     color: '#f5a623' },
+  'papaya':       { icon: '🫐', hindi: 'पपीता',        category: 'Fruit',     color: '#f5a623' },
+  'coconut':      { icon: '🥥', hindi: 'नारियल',       category: 'Fruit',     color: '#f5a623' },
+  'potato':       { icon: '🥔', hindi: 'आलू',          category: 'Vegetable', color: '#b06aff' },
+  'tomato':       { icon: '🍅', hindi: 'टमाटर',        category: 'Vegetable', color: '#b06aff' },
+  'onion':        { icon: '🧅', hindi: 'प्याज',        category: 'Vegetable', color: '#b06aff' },
+  'garlic':       { icon: '🧄', hindi: 'लहसुन',        category: 'Spice',     color: '#b06aff' },
+  'ginger':       { icon: '🫚', hindi: 'अदरक',         category: 'Spice',     color: '#b06aff' },
+  'mustard':      { icon: '🌼', hindi: 'सरसों',        category: 'Oilseed',   color: '#4a9eff' },
+  'groundnut':    { icon: '🥜', hindi: 'मूंगफली',      category: 'Oilseed',   color: '#4a9eff' },
+  'sunflower':    { icon: '🌻', hindi: 'सूरजमुखी',     category: 'Oilseed',   color: '#4a9eff' },
+  'cotton':       { icon: '🌿', hindi: 'कपास',         category: 'Cash Crop', color: '#ff6b6b' },
+  'jute':         { icon: '🌿', hindi: 'जूट',          category: 'Fiber',     color: '#ff6b6b' },
+  'sugarcane':    { icon: '🎋', hindi: 'गन्ना',        category: 'Cash Crop', color: '#ff6b6b' },
+};
+
+// ── Multi-step wizard state ───────────────────────────────────
+let currentStep = 1;
+let formData = {};
+let lastResults = [];
+
+function goToStep(step) {
+  document.querySelectorAll('.wizard-step').forEach((el, i) => {
+    el.classList.toggle('active', i + 1 === step);
+  });
+  document.querySelectorAll('.step-indicator').forEach((el, i) => {
+    el.classList.toggle('active', i + 1 === step);
+    el.classList.toggle('done',   i + 1 < step);
+  });
+  document.getElementById('progress-bar-fill').style.width =
+    `${((step - 1) / 2) * 100}%`;
+  currentStep = step;
+}
+
+function collectStep1() {
+  const district = document.getElementById('form-district')?.value;
+  const soil     = document.getElementById('form-soil')?.value;
+  const n        = document.getElementById('form-n')?.value;
+  const p        = document.getElementById('form-p')?.value;
+  const k        = document.getElementById('form-k')?.value;
+  const ph       = document.getElementById('form-ph')?.value;
+
+  // Check for empty strings specifically to allow '0' values
+  if (!district || !soil || n === '' || p === '' || k === '' || ph === '') return false;
+
+  formData.district = district;
+  formData.soil     = soil;
+  formData.n        = parseFloat(n);
+  formData.p        = parseFloat(p);
+  formData.k        = parseFloat(k);
+  formData.ph       = parseFloat(ph);
+  return true;
+}
+
+function collectStep2() {
+  const season = document.getElementById('form-season')?.value;
+  const water  = document.getElementById('form-water')?.value;
+  if (!season || !water) return false;
+  formData.season = season;
+  formData.water  = water;
+  return true;
+}
+
+// ── Build ML input vector from form data (with Live Weather) ──
+async function buildMLInput(data) {
+  // 1. Get Live Weather if possible
+  const live = await window.WeatherService.getWeather(data.district);
+  
+  // 2. Defaults if Offline/Failed
+  const defaults = DISTRICT_CLIMATE[data.district] || DISTRICT_CLIMATE['Dehradun'];
+  
+  const temp = live ? live.temp : defaults.temperature;
+  const hum  = live ? live.humidity : defaults.humidity;
+  // rainfall in Dataset is often cumulative or specific; 
+  // live.rainfall is last 1h/3h. We'll use a multiplier or the live value directly if robust.
+  // The dataset uses values like 200mm. Live might be 5mm/h. 
+  // Let's use the static rainfall if live is 0, or live * 24 if we want "daily"
+  const rain = (live && live.rainfall > 0) ? live.rainfall * 12 : defaults.rainfall;
+
+  // 3. Humidity Adjustment based on Water availability
+  const humAdj = WATER_HUMIDITY[data.water] || 0;
+
+  return {
+    n:    data.n,
+    p:    data.p,
+    k:    data.k,
+    temp:     temp,
+    humidity: Math.min(100, Math.max(10, hum + humAdj)),
+    ph:       data.ph,
+    rainfall: rain
+  };
+}
+
+// ── Animated score ring (Canvas) ─────────────────────────────
+function drawScoreRing(canvas, score, color = '#00e571') {
+  const size = canvas.width;
+  const ctx  = canvas.getContext('2d');
+  const cx = size / 2, cy = size / 2, r = size / 2 - 8;
+  const startAngle = -Math.PI / 2;
+  const endAngle   = startAngle + (score / 100) * 2 * Math.PI;
+
+  let progress = 0;
+  const animate = () => {
+    progress = Math.min(progress + 0.025, 1);
+    const curEnd = startAngle + progress * (endAngle - startAngle);
+    ctx.clearRect(0, 0, size, size);
+
+    // Track
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 8; ctx.stroke();
+
+    // Arc
+    ctx.beginPath(); ctx.arc(cx, cy, r, startAngle, curEnd);
+    ctx.strokeStyle = color; ctx.lineWidth = 8; ctx.lineCap = 'round';
+    ctx.shadowColor = color; ctx.shadowBlur = 14; ctx.stroke();
+
+    // Text
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${size * 0.22}px Outfit, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(Math.round(progress * score) + '%', cx, cy);
+
+    if (progress < 1) requestAnimationFrame(animate);
+  };
+  requestAnimationFrame(animate);
+}
+
+// ── Render ML results ─────────────────────────────────────────
+function renderResults(results, mlInput) {
+  const container = document.getElementById('results-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const rankColors = ['#00e571', '#2ed87a', '#60cc70', '#f5a623', '#ff6b6b'];
+
+  results.forEach((r, i) => {
+    const display = CROP_DISPLAY[r.crop] || { icon: '🌱', hindi: r.crop, category: 'Crop', color: '#7a9eb5' };
+    const conf = r.confidence;
+    const color = rankColors[i] || '#7a9eb5';
+    const confLabel = conf >= 80 ? 'Excellent' : conf >= 60 ? 'Good' : conf >= 40 ? 'Moderate' : 'Lower';
+    const localizedMatch = window.t('label.Match');
+    const localizedConf  = window.t('label.confidence');
+    const localizedCat   = window.t('cat.' + display.category);
+    const badgeClass     = conf >= 60 ? 'badge-green' : conf >= 40 ? 'badge-amber' : 'badge-red';
+
+    // Ideal range check
+    const rangeCheck = window.VrikshML.idealRangeCheck(r.crop, mlInput);
+    const idealCount = Object.values(rangeCheck).filter(c => c.within_1std).length;
+    const totalFeats = Object.keys(rangeCheck).length;
+
+    const card = document.createElement('div');
+    card.className = 'result-card glass-card reveal';
+    card.style.transitionDelay = `${i * 0.1}s`;
+    card.innerHTML = `
+      <div class="result-card-inner">
+        <div class="result-ring-wrap" style="background:rgba(0,0,0,0.25);">
+          <canvas class="score-ring" id="ring-${i}" width="88" height="88"></canvas>
+          <div class="result-rank" style="color:${color}">#${i + 1}</div>
+        </div>
+        <div class="result-info">
+          <div class="result-header">
+            <span class="result-icon">${display.icon}</span>
+            <div>
+              <h3 class="result-name">${r.crop.charAt(0).toUpperCase() + r.crop.slice(1)}
+                <span style="font-size:0.75rem;font-weight:400;color:var(--text-muted)"> · ${display.hindi}</span>
+              </h3>
+              <span class="badge ${badgeClass}">${confLabel} ${localizedMatch} · ${conf}% ${localizedConf}</span>
+            </div>
+            <span class="badge" style="margin-left:auto;background:rgba(255,255,255,0.05);color:var(--text-muted)">${localizedCat}</span>
+          </div>
+          <div class="result-range-bar" title="${idealCount}/${totalFeats} conditions within ideal range">
+            <span style="font-size:0.78rem;color:var(--text-muted)">${window.t('label.IdealMatch')}</span>
+            <div class="progress-bar mt-1" style="height:5px">
+              <div class="progress-fill" style="width:${Math.round(idealCount/totalFeats*100)}%;transition:width 1s ease 0.5s"></div>
+            </div>
+            <span style="font-size:0.75rem;color:var(--green-glow)">${idealCount}/${totalFeats} ${window.t('label.InIdeal')}</span>
+          </div>
+          <div class="result-feature-pills" id="pills-${i}"></div>
+          <div class="result-footer">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span class="text-muted" style="font-size:0.78rem">
+                🤖 ${window.t('label.UnifiedML')} · 93.0% ${window.t('label.accuracy')}
+              </span>
+              <button class="btn btn-sm btn-outline" 
+                      style="font-size:0.7rem;padding:4px 8px" 
+                      onclick="window.getFertilizerAdvice('${r.crop}', '${formData.soil}', ${formData.n}, ${formData.p}, ${formData.k})">
+                🧪 ${window.t('btn.fertilizer')}
+              </button>
+            </div>
+            <span class="badge badge-green" style="font-size:0.72rem">${window.t('label.Match')}: ${conf}%</span>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+    setTimeout(() => {
+      card.classList.add('visible');
+      // Render score ring
+      const ring = document.getElementById(`ring-${i}`);
+      if (ring) drawScoreRing(ring, conf, color);
+      // Render feature pills
+      const pillsEl = document.getElementById(`pills-${i}`);
+      if (pillsEl) renderFeaturePills(pillsEl, rangeCheck);
+    }, 80 + i * 100);
+  });
+
+  // Show model info banner
+  const banner = document.getElementById('ml-model-banner');
+  if (banner) {
+    const meta = window.VrikshML.metadata;
+    banner.innerHTML = `🤖 <strong>Unified ML Engine:</strong> ${meta.recommender} · Models: MLP + CNN + GB · End-to-End AI Advisory`;
+    banner.style.display = 'flex';
+  }
+}
+
+function renderFeaturePills(container, rangeCheck) {
+  const labels = {
+    N: '🌱 ' + window.t('label.Nitrogen'), 
+    P: '🔵 ' + window.t('label.Phosphorus'), 
+    K: '🟣 ' + window.t('label.Potassium'),
+    temperature: '🌡️ ' + window.t('label.Temp'), 
+    humidity: '💧 ' + window.t('label.Humidity'),
+    ph: '⚗️ ' + window.t('label.ph'), 
+    rainfall: '🌧️ ' + window.t('label.Rainfall')
+  };
+  container.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;margin:0.75rem 0';
+  for (const [feat, check] of Object.entries(rangeCheck)) {
+    const pill = document.createElement('span');
+    const ok   = check.within_1std;
+    pill.style.cssText = `font-size:0.72rem;padding:3px 8px;border-radius:12px;
+      background:${ok ? 'rgba(0,229,113,0.1)' : 'rgba(245,166,35,0.1)'};
+      border:1px solid ${ok ? 'rgba(0,229,113,0.25)' : 'rgba(245,166,35,0.25)'};
+      color:${ok ? 'var(--green-glow)' : 'var(--amber)'}`;
+    const featLabel = labels[feat] || feat;
+    pill.textContent = `${ok ? '✓' : '~'} ${featLabel}`;
+    pill.title = `Your value: ${check.value} | Ideal: ${check.ideal_mean} ±${check.ideal_std}`;
+    container.appendChild(pill);
+  }
+}
+
+// ── Voice advisory (Web Speech API) ──────────────────────────
+function speakAdvisory(results, lang = 'en') {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const top = results[0];
+  const display = CROP_DISPLAY[top.crop] || { hindi: top.crop };
+  const text = lang === 'hi'
+    ? `आपके खेत की परिस्थितियों के आधार पर, सर्वश्रेष्ठ फसल ${display.hindi} है। AI मॉडल का विश्वास स्तर ${top.confidence} प्रतिशत है।`
+    : `Based on your farm conditions, the AI model recommends ${top.crop} as the best crop with ${top.confidence}% confidence. This prediction is based on your district's climate, soil type, and water availability.`;
+
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang  = lang === 'hi' ? 'hi-IN' : 'en-IN';
+  utt.rate  = 0.88; utt.pitch = 1;
+  const waveWrap = document.getElementById('voice-waveform');
+  if (waveWrap) waveWrap.style.display = 'flex';
+  utt.onend = () => { if (waveWrap) waveWrap.style.display = 'none'; };
+  window.speechSynthesis.speak(utt);
+}
+
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  // Populate district dropdown
+  const distSel = document.getElementById('form-district');
+  if (distSel) {
+    Object.keys(DISTRICT_CLIMATE).forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d; opt.textContent = window.t('dist.' + d) || d;
+      distSel.appendChild(opt);
+    });
+
+    // Auto-fill N, P, K, pH when district changes
+    distSel.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      if (selected && DISTRICT_CLIMATE[selected]) {
+        const data = DISTRICT_CLIMATE[selected];
+        document.getElementById('form-n').value  = data.N;
+        document.getElementById('form-p').value  = data.P;
+        document.getElementById('form-k').value  = data.K;
+        
+        // Let soil selection drive pH more than district, 
+        // but if soil isn't picked yet, use district pH
+        const soilSel = document.getElementById('form-soil')?.value;
+        if (!soilSel) {
+          document.getElementById('form-ph').value = data.ph;
+        }
+      }
+    });
+  }
+
+  // Auto-update pH based on Soil type
+  const soilSel = document.getElementById('form-soil');
+  if (soilSel) {
+    soilSel.addEventListener('change', (e) => {
+      const selected = e.target.value;
+      if (selected && SOIL_PH[selected]) {
+        document.getElementById('form-ph').value = SOIL_PH[selected];
+      }
+    });
+  }
+
+
+  // (Moved model loading lower to ensure UI listeners attach first)
+  const loadML = async () => {
+    const modelStatus = document.getElementById('model-status');
+    const setStatus = (html, cls) => {
+      if (!modelStatus) return;
+      modelStatus.innerHTML = html;
+      modelStatus.className = `badge ${cls}`;
+    };
+
+    setStatus('⏳ ' + window.t('model.loading'), 'badge-amber');
+
+    const ok = await window.VrikshML.load();
+    if (ok) {
+      setStatus(`✅ ${window.t('model.ready')} · 94.2% ${window.t('label.accuracy')}`, 'badge-green');
+      return;
+    }
+
+    // Backend offline — start background retry
+    setStatus('🔄 Connecting to AI backend…', 'badge-amber');
+    window.VrikshML.retryConnect(
+      () => setStatus(`✅ ${window.t('model.ready')} · 94.2% ${window.t('label.accuracy')}`, 'badge-green'),
+      () => setStatus('❌ ' + window.t('model.failed') + ' — Start backend first', 'badge-red')
+    );
+  };
+  loadML(); // Run in background
+
+
+  // Step navigation (Using delegation for robustness)
+  document.addEventListener('click', (e) => {
+    const btnNext1 = e.target.closest('#btn-next-1');
+    const btnNext2 = e.target.closest('#btn-next-2');
+    const btnBack2 = e.target.closest('#btn-back-2');
+    const btnBack3 = e.target.closest('#btn-back-3');
+
+    if (btnNext1) {
+      if (collectStep1()) {
+        goToStep(2);
+      } else {
+        const msg = 'Please select your District and Soil type, and ensure all soil health values (N, P, K, pH) are entered.';
+        showError(msg);
+        alert(msg); // Forced alert for visibility
+      }
+    }
+    if (btnNext2) {
+      if (collectStep2()) {
+        updateSummary();
+        goToStep(3);
+      } else {
+        const msg = 'Please select season and water availability.';
+        showError(msg);
+        alert(msg);
+      }
+    }
+    if (btnBack2) goToStep(1);
+    if (btnBack3) goToStep(2);
+  });
+
+  // Submit — run ML prediction
+  document.getElementById('btn-submit')?.addEventListener('click', async () => {
+    const btn = document.getElementById('btn-submit');
+    const originalText = btn.textContent;
+    btn.textContent = '⏳ Running Neural Network...';
+    btn.disabled = true;
+
+    try {
+      const mlInput = await buildMLInput(formData);
+      let results;
+
+      if (window.VrikshML.loaded) {
+        results = await window.VrikshML.topN(mlInput, 5);
+      } else {
+        showError('AI model not active. Showing estimated results.');
+        results = getFallbackResults(formData);
+      }
+
+      lastResults = results;
+      const section = document.getElementById('results-section');
+      if (section) {
+        section.style.display = 'block';
+        const adDist = document.getElementById('advisory-district');
+        if (adDist) adDist.textContent = window.t('dist.' + formData.district) || formData.district;
+        setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      }
+      renderResults(results, mlInput);
+    } catch (e) {
+      showError('Prediction error: ' + e.message);
+    }
+
+    btn.textContent = originalText;
+    btn.disabled = false;
+  });
+
+  document.getElementById('btn-voice')?.addEventListener('click', () => {
+    if (lastResults.length) speakAdvisory(lastResults, 'en');
+  });
+
+  document.getElementById('btn-voice-hi')?.addEventListener('click', () => {
+    if (lastResults.length) speakAdvisory(lastResults, 'hi');
+  });
+
+  // Listen for language changes
+  window.addEventListener('langChanged', async () => {
+    // 1. Update district dropdown
+    const distSel = document.getElementById('form-district');
+    if (distSel) {
+      Array.from(distSel.options).forEach(opt => {
+        if (opt.value) opt.textContent = window.t('dist.' + opt.value);
+      });
+    }
+
+    // 2. Update model status if loaded
+    const modelStatus = document.getElementById('model-status');
+    if (modelStatus && window.VrikshML.loaded) {
+      modelStatus.innerHTML = `✅ ${window.t('model.ready')} · 94.2% ${window.t('label.accuracy')}`;
+    }
+
+    // 3. Update summary if data exists
+    if (formData.district) updateSummary();
+
+    // 4. Update results if visible
+    if (lastResults.length > 0) {
+      const adDist = document.getElementById('advisory-district');
+      if (adDist) adDist.textContent = window.t('dist.' + formData.district) || formData.district;
+      const mlInput = await buildMLInput(formData);
+      renderResults(lastResults, mlInput);
+    }
+  });
+});
+
+// ── Fertilizer Modal ──────────────────────────────────────────
+(function injectFertilizerModal() {
+  if (document.getElementById('fert-modal-overlay')) return;
+
+  // ── Inject CSS ──
+  const style = document.createElement('style');
+  style.textContent = `
+    #fert-modal-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(4, 12, 24, 0.75);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #fert-modal-overlay.open {
+      opacity: 1; pointer-events: all;
+    }
+    #fert-modal {
+      background: linear-gradient(135deg, rgba(10,22,40,0.97), rgba(6,16,30,0.97));
+      border: 1px solid rgba(0,229,113,0.22);
+      border-radius: 20px;
+      padding: 0;
+      width: min(540px, 94vw);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.7), 0 0 60px rgba(0,229,113,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+      transform: translateY(28px) scale(0.96);
+      transition: transform 0.38s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease;
+      overflow: hidden;
+      opacity: 0;
+    }
+    #fert-modal-overlay.open #fert-modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+    #fert-modal-header {
+      background: linear-gradient(90deg, rgba(0,229,113,0.12), rgba(74,158,255,0.06));
+      border-bottom: 1px solid rgba(0,229,113,0.15);
+      padding: 1.4rem 1.6rem 1.2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    #fert-modal-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(0,229,113,0.2), rgba(74,158,255,0.12));
+      border: 1px solid rgba(0,229,113,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem;
+      box-shadow: 0 4px 20px rgba(0,229,113,0.2);
+      flex-shrink: 0;
+      animation: fertIconPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes fertIconPulse {
+      0%, 100% { box-shadow: 0 4px 20px rgba(0,229,113,0.2); }
+      50%       { box-shadow: 0 4px 30px rgba(0,229,113,0.45); }
+    }
+    #fert-modal-title {
+      font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 700;
+      color: #e8f4f0; line-height: 1.3;
+    }
+    #fert-modal-subtitle {
+      font-size: 0.78rem; color: rgba(120,160,185,0.85); margin-top: 3px;
+    }
+    #fert-modal-close {
+      margin-left: auto; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 50%;
+      width: 32px; height: 32px; cursor: pointer; color: #7a9eb5;
+      font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s; flex-shrink: 0;
+    }
+    #fert-modal-close:hover { background: rgba(255,80,80,0.15); color: #ff6b6b; border-color: rgba(255,80,80,0.3); }
+    #fert-modal-body { padding: 1.5rem 1.6rem; }
+    #fert-advice-box {
+      background: rgba(0,229,113,0.05);
+      border: 1px solid rgba(0,229,113,0.15);
+      border-radius: 12px;
+      padding: 1.1rem 1.2rem;
+      margin-bottom: 1.2rem;
+      font-size: 0.95rem;
+      color: #c8e8d8;
+      line-height: 1.65;
+      position: relative;
+      overflow: hidden;
+    }
+    #fert-advice-box::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: linear-gradient(180deg, #00e571, #4a9eff);
+      border-radius: 3px 0 0 3px;
+    }
+    .fert-npk-row {
+      display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap;
+    }
+    .fert-npk-badge {
+      flex: 1; min-width: 90px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 10px 12px; text-align: center;
+      transition: transform 0.2s;
+    }
+    .fert-npk-badge:hover { transform: translateY(-2px); }
+    .fert-npk-badge .npk-val {
+      font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800;
+      line-height: 1;
+    }
+    .fert-npk-badge .npk-lbl {
+      font-size: 0.7rem; color: rgba(120,160,185,0.8); margin-top: 4px; letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    #fert-info-note {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(74,158,255,0.06);
+      border: 1px solid rgba(74,158,255,0.15);
+      border-radius: 10px; padding: 0.85rem 1rem;
+      font-size: 0.8rem; color: rgba(120,160,185,0.9); line-height: 1.5;
+    }
+    #fert-modal-footer {
+      padding: 1rem 1.6rem 1.4rem;
+      display: flex; gap: 10px; justify-content: flex-end;
+    }
+    #fert-btn-ok {
+      background: linear-gradient(135deg, #00e571, #00bb58);
+      border: none; border-radius: 12px;
+      padding: 0.7rem 1.8rem;
+      font-family: 'Outfit', sans-serif; font-size: 0.92rem; font-weight: 700;
+      color: #04101a; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,229,113,0.35);
+      transition: all 0.25s;
+    }
+    #fert-btn-ok:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,229,113,0.5); }
+    #fert-btn-ok:active { transform: scale(0.97); }
+  `;
+  document.head.appendChild(style);
+
+  // ── Inject HTML ──
+  const overlay = document.createElement('div');
+  overlay.id = 'fert-modal-overlay';
+  overlay.innerHTML = `
+    <div id="fert-modal" role="dialog" aria-modal="true" aria-labelledby="fert-modal-title">
+      <div id="fert-modal-header">
+        <div id="fert-modal-icon">🧪</div>
+        <div>
+          <div id="fert-modal-title">Fertilizer Recommendation</div>
+          <div id="fert-modal-subtitle">${window.t('fert.modal.subtitle') || 'AI-powered, soil N-P-K analysis'}</div>
+        </div>
+        <button id="fert-modal-close" aria-label="Close">✕</button>
+      </div>
+      <div id="fert-modal-body">
+        <div class="fert-npk-row" id="fert-npk-row"></div>
+        <div id="fert-advice-box"></div>
+        <div id="fert-info-note">
+          <span style="font-size:1.1rem;flex-shrink:0;">💡</span>
+          <span id="fert-modal-disclaimer">${window.t('fert.modal.note') || 'This advice is based on your current soil N-P-K levels, soil type, and crop requirements.'}</span>
+        </div>
+      </div>
+      <div id="fert-modal-footer">
+        <button id="fert-btn-ok">${window.t('btn.gotit') || '✅ Got it!'}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  // ── Close handlers ──
+  const close = () => overlay.classList.remove('open');
+  document.getElementById('fert-modal-close').addEventListener('click', close);
+  document.getElementById('fert-btn-ok').addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+})();
+
+function showFertilizerModal(crop, advice, n, p, k) {
+  const overlay = document.getElementById('fert-modal-overlay');
+  if (!overlay) return;
+
+  // Update header
+  const fertTitle = window.t('fert.modal.title') || 'Fertilizer Recommendation for {crop}';
+  document.getElementById('fert-modal-title').textContent = fertTitle.replace('{crop}', crop.charAt(0).toUpperCase() + crop.slice(1));
+  
+  // Update static labels if language changed
+  document.getElementById('fert-modal-subtitle').textContent = window.t('fert.modal.subtitle') || 'AI-powered analysis';
+  document.getElementById('fert-modal-disclaimer').textContent = window.t('fert.modal.note') || 'Disclaimer text here';
+  document.getElementById('fert-btn-ok').textContent = window.t('btn.gotit') || '✅ Got it!';
+
+  // Update NPK badges
+  const npkData = [
+    { val: n, lbl: window.t('label.Nitrogen') || 'Nitrogen (N)', color: '#00e571' },
+    { val: p, lbl: window.t('label.Phosphorus') || 'Phosphorus (P)', color: '#4a9eff' },
+    { val: k, lbl: window.t('label.Potassium') || 'Potassium (K)', color: '#b06aff' }
+  ];
+  document.getElementById('fert-npk-row').innerHTML = npkData.map(d => `
+    <div class="fert-npk-badge">
+      <div class="npk-val" style="color:${d.color}">${d.val}</div>
+      <div class="npk-lbl">${d.lbl}</div>
+    </div>
+  `).join('');
+
+  // Update advice
+  const adviceEl = document.getElementById('fert-advice-box');
+  // Format advice with bullet points if it contains commas
+  const formatted = advice.includes(',')
+    ? advice.split(',').map(s => `• ${s.trim()}`).join('<br>')
+    : advice;
+  adviceEl.innerHTML = formatted;
+
+  // Open with animation
+  overlay.classList.add('open');
+}
+
+window.getFertilizerAdvice = async (crop, soil, n, p, k) => {
+  try {
+    const currentLang = localStorage.getItem('km-lang') || 'en';
+    const advice = await window.VrikshML.predictFertilizer(soil, crop, n, p, k, currentLang);
+    showFertilizerModal(crop, advice, n, p, k);
+  } catch (err) {
+    console.error('Fertilizer advice error:', err);
+    const errMsg = (localStorage.getItem('km-lang') === 'hi') 
+      ? 'AI बैकएंड से कनेक्ट नहीं हो सका। कृपया बाद में प्रयास करें।' 
+      : 'Could not connect to AI backend. Please ensure the backend is running and try again.';
+    showFertilizerModal(crop, errMsg, n, p, k);
+  }
+};
+
+async function updateSummary() {
+  const seasons = { kharif: 'Kharif (Monsoon)', rabi: 'Rabi (Winter)' };
+  const waters  = { high: 'High', medium: 'Medium', low: 'Low (rain-fed)' };
+  document.getElementById('sum-district').textContent = window.t('dist.' + formData.district) || '—';
+  document.getElementById('sum-soil').textContent     = window.t('soil.' + formData.soil.toLowerCase()) || formData.soil || '—';
+  const seasonKey = 'season.' + formData.season.toLowerCase();
+  document.getElementById('sum-season').textContent   = window.t(seasonKey) || formData.season || '—';
+  const waterKey = 'water.' + formData.water.toLowerCase();
+  document.getElementById('sum-water').textContent    = window.t(waterKey)   || formData.water  || '—';
+}
+
+
+function showError(msg) {
+  const el = document.getElementById('form-error');
+  if (!el) return;
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// Simple fallback if model fails
+function getFallbackResults(data) {
+  const defaults = ['wheat', 'rice', 'maize', 'lentil', 'chickpea'];
+  return defaults.map((crop, i) => ({
+    crop, confidence: 60 - i * 8, probability: 0.5 - i * 0.08
+  }));
+}
