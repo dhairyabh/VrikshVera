@@ -9,7 +9,7 @@ const CHAT_URL = (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : 'http://loc
 const GROQ_MODEL = 'openai/gpt-oss-20b';
 
 // ── System Prompt ────────────────────────────────────────────
-const SYSTEM_PROMPT = `You are VrikshVera AI, an expert agricultural assistant for small farmers in Uttarakhand, India.
+const SYSTEM_PROMPT = `You are VrikshVera AI, an expert agricultural assistant for small farmers in India.
 
 Your role:
 - Diagnose crop diseases, pest problems, irrigation issues, and soil health problems.
@@ -18,7 +18,7 @@ Your role:
 - Reference platform features: AI Crop Advisor, Climate Dashboard, Voice Advisory.
 - Responses MUST be in the selected language only.
 - Be warm and empathetic. Maximum 4-5 sentences per reply.
-- Use lists for steps. Focus on Uttarakhand crops (wheat, rice, potato, apple).`;
+- Use lists for steps. Focus on Indian crops (wheat, rice, potato, apple).`;
 
 // ── Fallback Knowledge Base (Offline mode) ───────────────────
 const FALLBACK_KB = {
@@ -266,7 +266,7 @@ class VrikshBot {
           </div>
           <div class="bot-response-section mt-2">
             <span class="response-tag tag-gemini">✨ VrikshVera Insight</span>
-            <p>${this.currentLang === 'hi' ? `यह ${soilName} उत्तराखंड के कई क्षेत्रों में पाई जाती है। इसके लिए उपयुक्त फसलें जानने के लिए आप मेरा फसल सलाहकार (Crop Advisor) इस्तेमाल कर सकते हैं।` : `This ${top.soil} is common in various parts of Uttarakhand. You can use my Crop Advisor to see the best crops for this soil type.`}</p>
+            <p>${this.currentLang === 'hi' ? `यह ${soilName} भारत के कई क्षेत्रों में पाई जाती है। इसके लिए उपयुक्त फसलें जानने के लिए आप मेरा फसल सलाहकार (Crop Advisor) इस्तेमाल कर सकते हैं।` : `This ${top.soil} is common in various parts of India. You can use my Crop Advisor to see the best crops for this soil type.`}</p>
           </div>
         </div>`;
 

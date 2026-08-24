@@ -1,7 +1,7 @@
 {
   "name": "VrikshVera AI Climate Intelligence",
   "short_name": "VrikshVera",
-  "description": "Hyper-localized AI-powered agricultural advisory for farmers in Uttarakhand.",
+  "description": "Hyper-localized AI-powered agricultural advisory for farmers in India.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#010816",

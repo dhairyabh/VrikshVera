@@ -1,5 +1,5 @@
 # 👨‍🌾 VrikshVera (वृक्षवेरा)
-### *Empowering Uttarakhand's Farmers with AI Climate Intelligence*
+### *Empowering India's Farmers with AI Climate Intelligence*
 
 **VrikshVera** is a next-generation, offline-capable Progressive Web App (PWA) designed to provide hyper-local agriculture advisories to smallholder farmers in the Himalayan region. By combining satellite telemetry with on-device Machine Learning, it bridges the gap between complex climate data and actionable farm-level decisions.
 
@@ -10,7 +10,7 @@
 1.  **🤖 AI Crop Advisor**: A Gaussian Naive Bayes ML model (89% accuracy) that recommends the optimal of 35+ crops based on soil, season, and climate.
 2.  **🛰️ Satellite Risk Monitoring**: Real-time NDVI (Vegetation Index) and soil moisture tracking for precise farm health monitoring.
 3.  **⛈️ Weather Risk Engine**: Rule-based logic system that triggers instant alerts for Heavy Rain, Heat Stress (>35°C), and Cold Stress (<5°C).
-4.  **🗺️ Geo-Spatial Hazards**: Advanced risk mapping for Landslides, Floods, and Droughts across all 13 districts of Uttarakhand.
+4.  **🗺️ Geo-Spatial Hazards**: Advanced risk mapping for Landslides, Floods, and Droughts across all districts of India.
 5.  **💬 AI Chatbot (Groq-Powered)**: A multilingual, warm, and empathetic digital assistant that answers farming queries and provides immediate support.
 6.  **📱 Offline First (PWA)**: Full functionality in remote areas with zero internet coverage using Service Worker caching and local ML execution.
 
