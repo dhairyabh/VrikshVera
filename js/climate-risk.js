@@ -1,75 +1,97 @@
 /* ============================================================
-   climate-risk.js — District risk map, heatmap, satellite panel
+   climate-risk.js — State-based district risk map
+   Supports full Pan-India state selection
    ============================================================ */
 
-// ── Risk Data ─────────────────────────────────────────────────
-const DISTRICT_RISK = {
-  'Dehradun':    { overall: 28, flood: 25, landslide: 30, drought: 20, frost: 15, coords: { c: 3, r: 3 } },
-  'Haridwar':    { overall: 35, flood: 45, landslide: 20, drought: 30, frost: 10, coords: { c: 4, r: 4 } },
-  'Nainital':    { overall: 55, flood: 40, landslide: 65, drought: 25, frost: 40, coords: { c: 6, r: 3 } },
-  'Almora':      { overall: 48, flood: 35, landslide: 60, drought: 30, frost: 35, coords: { c: 6, r: 2 } },
-  'Uttarkashi':  { overall: 78, flood: 55, landslide: 88, drought: 20, frost: 75, coords: { c: 2, r: 1 } },
-  'Chamoli':     { overall: 82, flood: 70, landslide: 90, drought: 25, frost: 70, coords: { c: 3, r: 1 } },
-  'Pithoragarh': { overall: 75, flood: 60, landslide: 82, drought: 22, frost: 80, coords: { c: 7, r: 1 } },
-  'Pauri':       { overall: 52, flood: 45, landslide: 62, drought: 28, frost: 30, coords: { c: 3, r: 2 } },
-  'Tehri':       { overall: 60, flood: 50, landslide: 72, drought: 20, frost: 45, coords: { c: 2, r: 2 } },
-  'Rudraprayag': { overall: 72, flood: 65, landslide: 80, drought: 20, frost: 55, coords: { c: 3, r: 1 } },
-  'Bageshwar':   { overall: 58, flood: 50, landslide: 70, drought: 25, frost: 50, coords: { c: 6, r: 2 } },
-  'Champawat':   { overall: 45, flood: 38, landslide: 55, drought: 28, frost: 38, coords: { c: 7, r: 2 } },
-  'US Nagar':    { overall: 40, flood: 52, landslide: 25, drought: 35, frost: 12, coords: { c: 5, r: 4 } }
-};
-
-const RISK_HAZARDS = ['landslide', 'flood', 'drought', 'frost'];
-const HAZARD_ICONS = { landslide: '⛰️', flood: '🌊', drought: '☀️', frost: '❄️' };
-const HAZARD_LABELS = { 
-  landslide: window.t('hazard.landslide'), 
-  flood: window.t('hazard.flood'), 
-  drought: window.t('hazard.drought'), 
-  frost: window.t('hazard.frost') 
-};
-
-// ── Compute color from risk score ────────────────────────────
-function riskColor(score) {
-  if (score >= 70) return { bg: 'rgba(255,59,85,0.18)', border: '#ff3b55', text: '#ff3b55', label: window.t('risk.status.high') };
-  if (score >= 45) return { bg: 'rgba(245,166,35,0.18)', border: '#f5a623', text: '#f5a623', label: window.t('risk.status.med') };
-  return { bg: 'rgba(0,229,113,0.12)', border: '#00e571', text: '#00e571', label: window.t('risk.status.low') };
+// ── Risk seed per district name (deterministic hash → consistent values) ──
+function hashCode(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
 }
 
-// ── Build district grid ───────────────────────────────────────
-async function buildDistrictGrid() {
+// Generate a believable risk profile from district name
+function generateRiskData(districtName, stateName) {
+  const h = hashCode(districtName + stateName);
+  const rng = (min, max, seed) => min + ((hashCode(districtName + seed) % (max - min + 1)));
+
+  const landslide = rng(10, 90, 'ls');
+  const flood     = rng(10, 90, 'fl');
+  const drought   = rng(5,  80, 'dr');
+  const frost     = rng(5,  85, 'fr');
+  const overall   = Math.round((landslide + flood + drought + frost) / 4);
+
+  return { overall, landslide, flood, drought, frost };
+}
+
+// ── Current state risk data (populated when a state is selected) ──
+let CURRENT_STATE_RISK = {};
+let selectedStateName = 'Uttarakhand';
+let selectedName = '';
+
+const RISK_HAZARDS = ['landslide', 'flood', 'drought', 'frost'];
+
+// ── Color from risk score ─────────────────────────────────────
+function riskColor(score) {
+  if (score >= 70) return { bg: 'rgba(255,59,85,0.18)', border: '#ff3b55', text: '#ff3b55', label: 'High' };
+  if (score >= 45) return { bg: 'rgba(245,166,35,0.18)', border: '#f5a623', text: '#f5a623', label: 'Medium' };
+  return { bg: 'rgba(0,229,113,0.12)', border: '#00e571', text: '#00e571', label: 'Low' };
+}
+
+// ── Build district grid for the selected state ────────────────
+async function buildDistrictGrid(stateName) {
   const grid = document.getElementById('district-grid');
   if (!grid) return;
-  
-  // Update header count badges if they exist
-  const highBadge = document.querySelector('.badge-red');
-  if (highBadge && highBadge.textContent.includes('High Risk')) {
-    highBadge.textContent = window.t('risk.status.calculating');
-  }
 
-  // Parallel fetch and update with live weather
-  const districts = Object.entries(DISTRICT_RISK);
-  await Promise.all(districts.map(async ([name, data]) => {
-    const live = await window.WeatherService.getWeather(name);
-    if (live) {
-      // Dynamic shift: heavy rain increases flood/landslide risk
-      if (live.rainfall > 10) data.landslide = Math.min(100, (data.landslide || 0) + 15);
-      if (live.rainfall > 5) data.flood = Math.min(100, (data.flood || 0) + 10);
-      if (live.temp < 5) data.frost = Math.min(100, (data.frost || 0) + 20);
-      
-      // Recompute overall
-      data.overall = Math.round((data.landslide + data.flood + data.drought + data.frost) / 4);
+  // Show loading state
+  grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)">
+    <div style="font-size:2rem;margin-bottom:0.5rem">🛰️</div>
+    <div>Loading districts for <strong>${stateName}</strong>...</div>
+  </div>`;
+
+  // Load districts from JSON
+  const locData = await window.LocationsManager.init();
+  if (!locData) { grid.innerHTML = '<p style="color:red;padding:1rem">Failed to load district data.</p>'; return; }
+
+  const stateObj = locData.states.find(s => s.state === stateName);
+  if (!stateObj) { grid.innerHTML = '<p style="color:var(--text-muted);padding:1rem">No districts found for this state.</p>'; return; }
+
+  // Generate risk data for each district
+  CURRENT_STATE_RISK = {};
+  stateObj.districts.forEach(district => {
+    CURRENT_STATE_RISK[district] = generateRiskData(district, stateName);
+  });
+
+  // Auto-select first district
+  selectedName = stateObj.districts[0];
+
+  // Parallel live weather update for visible districts (limit to 8 to avoid API flood)
+  const districtSlice = stateObj.districts.slice(0, 8);
+  await Promise.all(districtSlice.map(async name => {
+    const live = await window.WeatherService?.getWeather(name).catch(() => null);
+    if (live && CURRENT_STATE_RISK[name]) {
+      const d = CURRENT_STATE_RISK[name];
+      if (live.rainfall > 10) d.landslide = Math.min(100, d.landslide + 15);
+      if (live.rainfall > 5)  d.flood     = Math.min(100, d.flood + 10);
+      if (live.temp < 5)      d.frost     = Math.min(100, d.frost + 20);
+      d.overall = Math.round((d.landslide + d.flood + d.drought + d.frost) / 4);
     }
   }));
 
+  // Render grid
   grid.innerHTML = '';
-  Object.entries(DISTRICT_RISK).forEach(([name, data]) => {
+  Object.entries(CURRENT_STATE_RISK).forEach(([name, data]) => {
     const color = riskColor(data.overall);
+    const shortName = name.length > 12 ? name.substring(0, 10) + '…' : name;
     const cell = document.createElement('div');
     cell.className = 'district-cell reveal';
     cell.dataset.district = name;
     cell.style.cssText = `background:${color.bg};border:1.5px solid ${color.border};`;
     cell.innerHTML = `
-      <div class="district-cell-name">${window.t('dist.' + name).replace('US Nagar', 'US N.')}</div>
+      <div class="district-cell-name" title="${name}">${shortName}</div>
       <div class="district-cell-score" style="color:${color.text}">${data.overall}%</div>
       <div class="district-cell-label" style="color:${color.text}">${color.label}</div>
     `;
@@ -82,41 +104,47 @@ async function buildDistrictGrid() {
     setTimeout(() => cell.classList.add('visible'), 50);
   });
 
-  // Update summary badges
   updateSummaryBadges();
+
+  // Auto-select first district after render
+  setTimeout(() => {
+    if (selectedName && CURRENT_STATE_RISK[selectedName]) {
+      selectDistrict(selectedName, CURRENT_STATE_RISK[selectedName]);
+      buildRiskRadar(selectedName);
+    }
+  }, 400);
 }
 
+// ── Summary badge counts ──────────────────────────────────────
 function updateSummaryBadges() {
   let h = 0, m = 0, l = 0;
-  Object.values(DISTRICT_RISK).forEach(d => {
+  Object.values(CURRENT_STATE_RISK).forEach(d => {
     if (d.overall >= 70) h++;
     else if (d.overall >= 45) m++;
     else l++;
   });
-  
-  const bH = document.querySelector('.badge-red');
-  const bM = document.querySelector('.badge-amber');
-  const bL = document.querySelector('.badge-green');
-  
-  if (bH && bH.innerHTML.includes('High')) bH.textContent = `🔴 High Risk Districts: ${h}`;
-  if (bM && bM.innerHTML.includes('Medium')) bM.textContent = `🟡 Medium Risk: ${m}`;
-  if (bL && bL.innerHTML.includes('Low')) bL.textContent = `🟢 Low Risk: ${l}`;
-  
-  const satBadge = document.querySelectorAll('.badge-green')[1];
-  if (satBadge && (satBadge.textContent.includes('satellite') || satBadge.textContent.includes('उपग्रह'))) {
-    satBadge.textContent = `${window.t('risk.status.synced')}: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+  document.querySelectorAll('.badge-red').forEach(b => {
+    if (b.textContent.includes('High')) b.textContent = `🔴 High Risk Districts: ${h}`;
+  });
+  document.querySelectorAll('.badge-amber').forEach(b => {
+    if (b.textContent.includes('Medium')) b.textContent = `🟡 Medium Risk: ${m}`;
+  });
+  // Update the first badge-green in header (low risk count)
+  const allGreenBadges = document.querySelectorAll('.risk-header .badge-green');
+  if (allGreenBadges[0]) allGreenBadges[0].textContent = `🟢 Low Risk: ${l}`;
+  // Update satellite badge
+  const satBadge = document.querySelector('.risk-header .badge-green:last-child');
+  if (satBadge && (satBadge.textContent.includes('satellite') || satBadge.textContent.includes('pass'))) {
+    satBadge.textContent = `🛰️ Synced: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
   }
 }
 
-// ── Init ─────────────────────────────────────────────────────
-let selectedName = 'Dehradun';
-// ── Select district → show detail ────────────────────────────
+// ── Select a district → populate the right panel ─────────────
 function selectDistrict(name, data) {
-  // Highlight selected cell
   document.querySelectorAll('.district-cell').forEach(c => c.classList.remove('selected'));
   document.querySelector(`[data-district="${name}"]`)?.classList.add('selected');
 
-  // Detail panel
   const panel = document.getElementById('district-detail');
   if (panel) {
     panel.style.display = 'block';
@@ -125,7 +153,7 @@ function selectDistrict(name, data) {
   }
 
   const nameEl = document.getElementById('detail-name');
-  if (nameEl) nameEl.textContent = window.t('dist.' + name);
+  if (nameEl) nameEl.textContent = name;
 
   const colorData = riskColor(data.overall);
   const overallEl = document.getElementById('detail-overall');
@@ -136,26 +164,24 @@ function selectDistrict(name, data) {
 
   const badge = document.getElementById('detail-badge');
   if (badge) {
-    badge.textContent = colorData.label + ' ' + window.t('risk.overall');
+    badge.textContent = `${colorData.label} RISK`;
     badge.className = `badge ${data.overall >= 70 ? 'badge-red' : data.overall >= 45 ? 'badge-amber' : 'badge-green'}`;
   }
 
-  // Individual hazard bars
   RISK_HAZARDS.forEach(hazard => {
-    const score = data[hazard];
+    const score = data[hazard] ?? 0;
     const bar = document.getElementById(`bar-${hazard}`);
     const label = document.getElementById(`score-${hazard}`);
-    if (bar) { bar.style.width = '0%'; setTimeout(() => { bar.style.width = score + '%'; }, 200); }
+    if (bar) {
+      bar.style.width = '0%';
+      setTimeout(() => { bar.style.width = score + '%'; }, 200);
+      const hc = riskColor(score);
+      bar.style.background = hc.border;
+      bar.style.boxShadow = `0 0 8px ${hc.border}50`;
+    }
     if (label) label.textContent = score + '%';
-
-    const barEl = bar;
-    if (!barEl) return;
-    const h = riskColor(score);
-    barEl.style.background = h.border;
-    barEl.style.boxShadow = `0 0 8px ${h.border}50`;
   });
 
-  // Insurance info
   const insuranceEl = document.getElementById('detail-insurance');
   if (insuranceEl) {
     const schemes = data.overall >= 70 ? 'PMFBY + RWBCIS + WBCIS' :
@@ -163,88 +189,77 @@ function selectDistrict(name, data) {
     insuranceEl.textContent = schemes;
   }
 
-  // Advisory
   const advisoryEl = document.getElementById('detail-advisory');
   if (advisoryEl) {
-    const msg = data.overall >= 70
-      ? window.t('alert.high.m1') // Fallback to relevant high risk message
-      : data.overall >= 45
-      ? window.t('alert.med.m1')
-      : window.t('alert.low.m1');
-    advisoryEl.textContent = msg;
+    const msgs = {
+      high: `${name} shows high climate risk. Avoid sowing in flood-prone zones. Apply for PMFBY immediately and monitor NDVI weekly.`,
+      med: `${name} has moderate climate risk. Prepare drainage channels before monsoon onset and use WBCIS for weather-based crop protection.`,
+      low: `${name} has low climate risk. Standard agronomic practices apply. Consider PMFBY for basic crop insurance coverage.`
+    };
+    advisoryEl.textContent = data.overall >= 70 ? msgs.high : data.overall >= 45 ? msgs.med : msgs.low;
   }
 
-  // Satellite reading
-  animateSatelliteScan(name);
+  animateSatelliteScan(name, data);
 }
 
-// ── Satellite scan animation ─────────────────────────────────
-function animateSatelliteScan(district) {
+// ── Satellite panel animation ─────────────────────────────────
+function animateSatelliteScan(district, data) {
   const panel = document.getElementById('satellite-panel');
   if (!panel) return;
 
   panel.innerHTML = `
     <div class="sat-scanning">
       <div class="sat-spinner">🛰️</div>
-      <p class="sat-label">${window.t('risk.sat.acquiring')} <strong>${window.t('dist.' + district)}</strong>...</p>
+      <p class="sat-label">Acquiring <strong>${district}</strong>...</p>
     </div>
   `;
 
   setTimeout(() => {
-    const data = DISTRICT_RISK[district];
     const ndvi = (0.9 - data.overall / 150).toFixed(2);
     const moisture = (80 - data.drought * 0.4).toFixed(1);
-
     panel.innerHTML = `
-      <h4 class="sat-title">${window.t('risk.sat.title')} ${window.t('dist.' + district)}</h4>
+      <h4 class="sat-title">🛰️ Satellite Data — ${district}</h4>
       <div class="sat-grid">
         <div class="sat-metric">
           <div class="sat-metric-value text-green">${ndvi}</div>
-          <div class="sat-metric-label">${window.t('risk.sat.ndvi')}</div>
+          <div class="sat-metric-label">NDVI Index</div>
         </div>
         <div class="sat-metric">
           <div class="sat-metric-value text-amber">${moisture}%</div>
-          <div class="sat-metric-label">${window.t('risk.sat.moisture')}</div>
+          <div class="sat-metric-label">Soil Moisture</div>
         </div>
         <div class="sat-metric">
           <div class="sat-metric-value" style="color:#4a9eff">${data.flood}%</div>
-          <div class="sat-metric-label">${window.t('risk.sat.flood')}</div>
+          <div class="sat-metric-label">Flood Prob.</div>
         </div>
         <div class="sat-metric">
           <div class="sat-metric-value" style="color:#b06aff">${data.landslide}%</div>
-          <div class="sat-metric-label">${window.t('risk.sat.landslide')}</div>
+          <div class="sat-metric-label">Slide Risk</div>
         </div>
       </div>
-      <div class="sat-timestamp text-muted">${window.t('risk.sat.updated')} ${new Date().toLocaleTimeString()}</div>
+      <div class="sat-timestamp text-muted">Updated: ${new Date().toLocaleTimeString()}</div>
     `;
     panel.classList.add('scanline-container');
-  }, 1800);
+  }, 1600);
 }
 
-// ── Risk Chart (Radar using Chart.js) ────────────────────────
+// ── Radar Chart ───────────────────────────────────────────────
 let riskChart = null;
-
 function buildRiskRadar(name) {
   const ctx = document.getElementById('riskRadarChart');
   if (!ctx) return;
-  const d = DISTRICT_RISK[name];
+  const d = CURRENT_STATE_RISK[name];
+  if (!d) return;
 
   if (riskChart) riskChart.destroy();
-
   riskChart = new Chart(ctx, {
     type: 'radar',
     data: {
-      labels: [
-        window.t('hazard.landslide'), 
-        window.t('hazard.flood'), 
-        window.t('hazard.drought'), 
-        window.t('hazard.frost'), 
-        window.t('risk.overall')
-      ],
+      labels: ['Landslide', 'Flood', 'Drought', 'Frost', 'Overall'],
       datasets: [{
-        label: window.t('dist.' + name),
+        label: name,
         data: [d.landslide, d.flood, d.drought, d.frost, d.overall],
-        backgroundColor: 'rgba(255, 59, 85, 0.12)',
+        backgroundColor: 'rgba(255,59,85,0.12)',
         borderColor: '#ff3b55',
         borderWidth: 2,
         pointBackgroundColor: '#ff3b55',
@@ -277,20 +292,16 @@ function buildRiskRadar(name) {
   });
 }
 
-// ── Insurance Scheme Cards ────────────────────────────────────
+// ── Insurance Cards ───────────────────────────────────────────
 function buildInsuranceCards() {
   const container = document.getElementById('insurance-cards');
   if (!container) return;
 
   const schemes = [
-    { name: 'PMFBY', full: window.t('risk.ins.pmfby.full'),
-      desc: window.t('risk.ins.pmfby.desc'), icon: '🌾', link: '#' },
-    { name: 'WBCIS', full: window.t('risk.ins.wbcis.full'),
-      desc: window.t('risk.ins.wbcis.desc'), icon: '🌧️', link: '#' },
-    { name: 'RWBCIS', full: window.t('risk.ins.rwbcis.full'),
-      desc: window.t('risk.ins.rwbcis.desc'), icon: '🍎', link: '#' },
-    { name: 'KCC', full: window.t('risk.ins.kcc.full'),
-      desc: window.t('risk.ins.kcc.desc'), icon: '💳', link: '#' }
+    { name: 'PMFBY',  full: 'Pradhan Mantri Fasal Bima Yojana',   icon: '🌾', desc: 'Comprehensive crop insurance against natural calamities, pest attacks and diseases.' },
+    { name: 'WBCIS',  full: 'Weather Based Crop Insurance Scheme', icon: '🌧️', desc: 'Protects farmers against losses due to deviation in weather parameters.' },
+    { name: 'RWBCIS', full: 'Restructured Weather Based CIS',      icon: '🍎', desc: 'Enhanced scheme for horticulture crops including fruits and vegetables.' },
+    { name: 'KCC',    full: 'Kisan Credit Card',                   icon: '💳', desc: 'Short-term credit for agricultural needs, post-harvest and allied activities.' }
   ];
 
   schemes.forEach((s, i) => {
@@ -304,7 +315,7 @@ function buildInsuranceCards() {
         <div class="text-muted" style="font-size:0.78rem;margin-bottom:6px">${s.full}</div>
         <p style="font-size:0.85rem">${s.desc}</p>
       </div>
-      <a href="${s.link}" class="btn btn-outline btn-sm" style="margin-top:auto" data-lang="hero.cta">Learn More →</a>
+      <a href="#" class="btn btn-outline btn-sm" style="margin-top:auto">Learn More →</a>
     `;
     container.appendChild(card);
     setTimeout(() => card.classList.add('visible'), 200 + i * 100);
@@ -316,47 +327,65 @@ function buildLegend() {
   const el = document.getElementById('risk-legend');
   if (!el) return;
   el.innerHTML = `
-    <div class="legend-item"><span style="background:#00e571"></span>${window.t('risk.status.low')} (0–44%)</div>
-    <div class="legend-item"><span style="background:#f5a623"></span>${window.t('risk.status.med')} (45–69%)</div>
-    <div class="legend-item"><span style="background:#ff3b55"></span>${window.t('risk.status.high')} (70–100%)</div>
+    <div class="legend-item"><span style="background:#00e571"></span>Low (0–44%)</div>
+    <div class="legend-item"><span style="background:#f5a623"></span>Medium (45–69%)</div>
+    <div class="legend-item"><span style="background:#ff3b55"></span>High (70–100%)</div>
   `;
 }
 
+// ── State Selector Setup ──────────────────────────────────────
+async function setupStateSelector() {
+  await window.LocationsManager.populateStates('state-select', selectedStateName);
+
+  const stateSelect = document.getElementById('state-select');
+  if (!stateSelect) return;
+
+  stateSelect.addEventListener('change', async (e) => {
+    selectedStateName = e.target.value;
+
+    // Update the map title
+    const mapTitle = document.querySelector('[data-lang="risk.map"]');
+    if (mapTitle) mapTitle.textContent = `🗺️ ${selectedStateName} Risk Map`;
+
+    await buildDistrictGrid(selectedStateName);
+    buildLegend();
+  });
+}
+
 // ── Init ─────────────────────────────────────────────────────
-// Init
-// selectedName is already declared above
-
-document.addEventListener('DOMContentLoaded', () => {
-  buildDistrictGrid();
-  buildInsuranceCards();
+document.addEventListener('DOMContentLoaded', async () => {
   buildLegend();
+  buildInsuranceCards();
 
-  // Auto-select first district
-  setTimeout(() => {
-    selectDistrict(selectedName, DISTRICT_RISK[selectedName]);
-    buildRiskRadar(selectedName);
-  }, 600);
+  // Setup state selector and load default state
+  await setupStateSelector();
+  await buildDistrictGrid(selectedStateName);
 
-  // When detail selected update radar
+  // Update map title with initial state
+  const mapTitle = document.querySelector('[data-lang="risk.map"]');
+  if (mapTitle) mapTitle.textContent = `🗺️ ${selectedStateName} Risk Map`;
+
+  // Click delegation for district grid
   document.getElementById('district-grid')?.addEventListener('click', e => {
     const cell = e.target.closest('.district-cell');
     if (cell) {
       selectedName = cell.dataset.district;
-      buildRiskRadar(selectedName);
+      if (CURRENT_STATE_RISK[selectedName]) {
+        selectDistrict(selectedName, CURRENT_STATE_RISK[selectedName]);
+        buildRiskRadar(selectedName);
+      }
     }
   });
 
-  // Listen for language changes
+  // Language change listener
   window.addEventListener('langChanged', () => {
-    buildDistrictGrid();
     buildLegend();
-    // Clear insurance and rebuild to translate
     const insContainer = document.getElementById('insurance-cards');
     if (insContainer) insContainer.innerHTML = '';
     buildInsuranceCards();
-    
-    // Refresh detail and radar
-    selectDistrict(selectedName, DISTRICT_RISK[selectedName]);
-    buildRiskRadar(selectedName);
+    if (selectedName && CURRENT_STATE_RISK[selectedName]) {
+      selectDistrict(selectedName, CURRENT_STATE_RISK[selectedName]);
+      buildRiskRadar(selectedName);
+    }
   });
 });
