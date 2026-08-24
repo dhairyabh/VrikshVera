@@ -50,10 +50,18 @@
         <span class="badge badge-amber" data-lang="badge.offline">📶 Offline Ready</span>
       </div>
     </div>
-    <div class="dash-district-select">
-      <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:6px" data-lang="form.district.label">Select District</label>
-      <div class="select-wrapper">
-        <select id="district-select" style="min-width:200px"></select>
+    <div class="dash-district-select" style="display:flex; gap:10px;">
+      <div>
+        <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:6px" data-lang="form.state.label">Select State</label>
+        <div class="select-wrapper">
+          <select id="state-select" style="min-width:150px"></select>
+        </div>
+      </div>
+      <div>
+        <label style="font-size:0.85rem;color:var(--text-muted);display:block;margin-bottom:6px" data-lang="form.district.label">Select District</label>
+        <div class="select-wrapper">
+          <select id="district-select" style="min-width:150px"></select>
+        </div>
       </div>
     </div>
   </div>
@@ -217,6 +225,7 @@
 
 
 <script src="js/main_v25.js?v=1.1"></script>
+<script src="js/locations.js?v=1.0"></script>
 <script src="js/weather-engine.js?v=1.1"></script>
 <script src="js/config.js"></script>
 <script src="js/weather-service.js?v=1.1"></script>

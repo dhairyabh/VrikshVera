@@ -284,7 +284,11 @@ async function refreshDashboard(district) {
     indicator.style.color = 'var(--amber)';
   }
 
-  const d = DISTRICTS[district];
+  let d = DISTRICTS[district];
+  if (!d) {
+    d = { temp: 25, humidity: 60, rainfall: 10, wind: 10, risk: 'low', soil: 'Loamy', ndvi: 0.65 };
+    DISTRICTS[district] = d;
+  }
 
   // Fetch Live Data
   const liveData = await window.WeatherService.getWeather(district);
@@ -331,7 +335,8 @@ async function refreshDashboard(district) {
 
   // Update district name
   const nameEl = document.getElementById('selected-district');
-  if (nameEl) nameEl.textContent = window.t('dist.' + district);
+  // If it's a hardcoded translated district, use it, else just show the name
+  if (nameEl) nameEl.textContent = window.t('dist.' + district) !== ('dist.' + district) ? window.t('dist.' + district) : district;
 }
 
 // ── Live clock ───────────────────────────────────────────────
@@ -369,33 +374,35 @@ function initAutoRefresh() {
 }
 
 // ── Init ─────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const select = document.getElementById('district-select');
   if (!select) return;
 
-  // Populate options
-  Object.keys(DISTRICTS).forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d;
-    opt.textContent = window.t('dist.' + d);
-    select.appendChild(opt);
-  });
-
-  select.addEventListener('change', () => refreshDashboard(select.value));
+  let defaultDistrict = 'Pune';
+  
+  if (window.LocationsManager) {
+    await window.LocationsManager.setupCascadingDropdowns('state-select', 'district-select', 'Maharashtra', 'Pune', (dist, state) => {
+        refreshDashboard(dist);
+    });
+  } else {
+    // Fallback if locations.js fails
+    Object.keys(DISTRICTS).forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = window.t('dist.' + d);
+      select.appendChild(opt);
+    });
+    select.addEventListener('change', () => refreshDashboard(select.value));
+    defaultDistrict = 'Dehradun';
+    select.value = defaultDistrict;
+  }
 
   // Listen for language changes to update dynamic parts
   window.addEventListener('langChanged', () => {
     const val = select.value;
-    // Update select options text
-    Array.from(select.options).forEach(opt => {
-      opt.textContent = window.t('dist.' + opt.value);
-    });
     refreshDashboard(val);
   });
 
-  // Default
-  const defaultDistrict = 'Dehradun';
-  select.value = defaultDistrict;
   refreshDashboard(defaultDistrict);
   initClock();
   initAutoRefresh();

@@ -142,6 +142,51 @@ def get_weather():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/weather/location', methods=['GET'])
+def get_weather_by_location():
+    if not OPENWEATHER_API_KEY:
+        return jsonify({"status": "error", "message": "OPENWEATHER_API_KEY not configured"}), 503
+        
+    try:
+        district = request.args.get('district')
+        if not district:
+            return jsonify({"status": "error", "message": "District is required"}), 400
+            
+        # 1. Geocode the district
+        geo_url = f"http://api.openweathermap.org/geo/1.0/direct?q={district},IN&limit=1&appid={OPENWEATHER_API_KEY}"
+        geo_res = requests.get(geo_url)
+        geo_data = geo_res.json()
+        
+        if not geo_data or len(geo_data) == 0:
+            return jsonify({"status": "error", "message": f"Could not find coordinates for {district}"}), 404
+            
+        lat = geo_data[0]['lat']
+        lon = geo_data[0]['lon']
+        
+        # 2. Get Weather using lat/lon (with cache)
+        cache_key = (round(lat, 4), round(lon, 4))
+        import time
+        now = time.time()
+        if cache_key in weather_cache:
+            entry = weather_cache[cache_key]
+            if now < entry['expiry']:
+                return jsonify(entry['data']), 200
+
+        url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={OPENWEATHER_API_KEY}&units=metric"
+        res = requests.get(url)
+        data = res.json()
+        
+        if res.status_code == 200:
+            weather_cache[cache_key] = {
+                'data': data,
+                'expiry': now + CACHE_DURATION_SEC
+            }
+            
+        return jsonify(data), res.status_code
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.route('/predict/soil', methods=['POST'])
 def predict_soil():
     if 'image' not in request.files:

@@ -121,7 +121,7 @@ async function buildMLInput(data) {
   const live = await window.WeatherService.getWeather(data.district);
   
   // 2. Defaults if Offline/Failed
-  const defaults = DISTRICT_CLIMATE[data.district] || DISTRICT_CLIMATE['Dehradun'];
+  const defaults = DISTRICT_CLIMATE[data.district] || { temperature: 25, humidity: 60, rainfall: 1000 };
   
   const temp = live ? live.temp : defaults.temperature;
   const hum  = live ? live.humidity : defaults.humidity;
@@ -314,30 +314,17 @@ function speakAdvisory(results, lang = 'en') {
 
 // ── Init ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  // Populate district dropdown
-  const distSel = document.getElementById('form-district');
-  if (distSel) {
-    Object.keys(DISTRICT_CLIMATE).forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d; opt.textContent = window.t('dist.' + d) || d;
-      distSel.appendChild(opt);
-    });
-
-    // Auto-fill N, P, K, pH when district changes
-    distSel.addEventListener('change', (e) => {
-      const selected = e.target.value;
-      if (selected && DISTRICT_CLIMATE[selected]) {
-        const data = DISTRICT_CLIMATE[selected];
-        document.getElementById('form-n').value  = data.N;
-        document.getElementById('form-p').value  = data.P;
-        document.getElementById('form-k').value  = data.K;
-        
-        // Let soil selection drive pH more than district, 
-        // but if soil isn't picked yet, use district pH
-        const soilSel = document.getElementById('form-soil')?.value;
-        if (!soilSel) {
-          document.getElementById('form-ph').value = data.ph;
-        }
+  // Populate state/district dropdown
+  if (window.LocationsManager) {
+    await window.LocationsManager.setupCascadingDropdowns('form-state', 'form-district', 'Maharashtra', 'Pune', (dist) => {
+      // Auto-fill generic N, P, K when district changes (to save user typing if they don't know)
+      document.getElementById('form-n').value  = 40 + Math.floor(Math.random() * 30);
+      document.getElementById('form-p').value  = 30 + Math.floor(Math.random() * 20);
+      document.getElementById('form-k').value  = 35 + Math.floor(Math.random() * 20);
+      
+      const soilSel = document.getElementById('form-soil')?.value;
+      if (!soilSel) {
+        document.getElementById('form-ph').value = 6.5;
       }
     });
   }
@@ -456,11 +443,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Listen for language changes
   window.addEventListener('langChanged', async () => {
-    // 1. Update district dropdown
+    // 1. Update district dropdown translations
     const distSel = document.getElementById('form-district');
     if (distSel) {
       Array.from(distSel.options).forEach(opt => {
-        if (opt.value) opt.textContent = window.t('dist.' + opt.value);
+        if (opt.value) {
+            const trans = window.t('dist.' + opt.value);
+            opt.textContent = trans !== ('dist.' + opt.value) ? trans : opt.value;
+        }
       });
     }
 

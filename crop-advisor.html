@@ -98,12 +98,18 @@
         <h3 class="step-title" data-lang="step1.title">📍 Step 1: Location & Soil Type</h3>
         <p class="step-desc text-muted" data-lang="step1.desc">Select your district and soil type for climate-matched recommendations</p>
         <div class="form-row">
-          <div class="form-group">
-            <label data-lang="form.district.label">District</label>
-            <div class="select-wrapper">
-              <select id="form-district">
-                <option value="" data-lang="form.district.placeholder">Select district...</option>
-              </select>
+          <div class="form-group" style="display:flex; gap:10px;">
+            <div style="flex:1;">
+              <label data-lang="form.state.label">State</label>
+              <div class="select-wrapper">
+                <select id="form-state"></select>
+              </div>
+            </div>
+            <div style="flex:1;">
+              <label data-lang="form.district.label">District</label>
+              <div class="select-wrapper">
+                <select id="form-district"></select>
+              </div>
             </div>
           </div>
           <div class="form-group">
@@ -280,6 +286,7 @@
 
   
   <script src="js/main_v25.js"></script>
+  <script src="js/locations.js?v=1.0"></script>
   <script src="js/weather-engine.js"></script>
   <script src="js/config.js"></script>
   <script src="js/weather-service.js"></script>

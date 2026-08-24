@@ -4,35 +4,14 @@
    ============================================================ */
 
 const WeatherService = {
-    BASE_URL: (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : 'http://localhost:5000') + '/api/weather',
+    BASE_URL: (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : 'http://localhost:5000') + '/api/weather/location',
     CACHE_EXPIRY: 5 * 60 * 1000, // 5 minutes in ms
-
-    // Geographic Coordinates for Uttarakhand Districts
-    COORDS: {
-        'Dehradun':    { lat: 30.3165, lon: 78.0322 },
-        'Haridwar':    { lat: 29.9457, lon: 78.1642 },
-        'Nainital':    { lat: 29.3803, lon: 79.4635 },
-        'Almora':      { lat: 29.5971, lon: 79.6591 },
-        'Uttarkashi':  { lat: 30.7268, lon: 78.4354 },
-        'Chamoli':     { lat: 30.4150, lon: 79.3300 },
-        'Pithoragarh': { lat: 29.5829, lon: 80.2182 },
-        'Pauri':       { lat: 30.1510, lon: 78.7770 },
-        'Tehri':       { lat: 30.3800, lon: 78.4800 },
-        'Rudraprayag': { lat: 30.2844, lon: 78.9811 },
-        'Bageshwar':   { lat: 29.8400, lon: 79.7700 },
-        'Champawat':   { lat: 29.3361, lon: 80.0910 },
-        'US Nagar':    { lat: 29.0275, lon: 79.5235 }
-    },
 
     /**
      * Fetch weather for a specific district (with caching)
      */
     async getWeather(district) {
-        const coords = this.COORDS[district];
-        if (!coords) {
-            console.error(`Coords not found for ${district}`);
-            return null;
-        }
+        if (!district) return null;
 
         // 1. Check Cache
         const cached = this._getCache(district);
@@ -40,7 +19,7 @@ const WeatherService = {
 
         // 2. Fetch Live Data
         try {
-            const response = await fetch(`${this.BASE_URL}?lat=${coords.lat}&lon=${coords.lon}`);
+            const response = await fetch(`${this.BASE_URL}?district=${encodeURIComponent(district)}`);
             if (!response.ok) throw new Error(`Weather API failed: ${response.statusText}`);
             
             const data = await response.json();
